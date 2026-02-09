@@ -26,10 +26,10 @@ const productSchema = new Schema<ProductDocument>(
     fullDescription: String,
     image: String,
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const Product = mongoose.model<ProductDocument>(
   "Product",
-  productSchema
+  productSchema,
 );

@@ -5,12 +5,7 @@ import { authGuard, authGuardAdmin } from "../middleware/authGuard";
 const router = Router();
 
 // Admin-only routes
-router.post(
-  "/",
-  authGuard,
-  authGuardAdmin,
-  categoryController.addCategory
-);
+router.post("/", authGuard, authGuardAdmin, categoryController.addCategory);
 
 router.get("/", categoryController.getCategories);
 
@@ -20,14 +15,14 @@ router.put(
   "/:id",
   authGuard,
   authGuardAdmin,
-  categoryController.updateCategory
+  categoryController.updateCategory,
 );
 
 router.delete(
   "/:id",
   authGuard,
   authGuardAdmin,
-  categoryController.deleteCategory
+  categoryController.deleteCategory,
 );
 
 export default router;

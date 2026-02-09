@@ -10,21 +10,21 @@ router.post(
   authGuard,
   authGuardBusiness,
   uploadProductImage.single("image"),
-  productController.addProduct
+  productController.addProduct,
 );
 
 router.get(
   "/business",
   authGuard,
   authGuardBusiness,
-  productController.getBusinessProducts
+  productController.getBusinessProducts,
 );
 
 router.get(
   "/:id",
   authGuard,
   authGuardBusiness,
-  productController.getProductById
+  productController.getProductById,
 );
 
 router.put(
@@ -32,14 +32,14 @@ router.put(
   authGuard,
   authGuardBusiness,
   uploadProductImage.single("image"),
-  productController.updateProduct
+  productController.updateProduct,
 );
 
 router.delete(
   "/:id",
   authGuard,
   authGuardBusiness,
-  productController.deleteProduct
+  productController.deleteProduct,
 );
 
 export default router;

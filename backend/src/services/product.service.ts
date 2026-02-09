@@ -1,4 +1,3 @@
-
 import { ProductRepository } from "../repositories/product.repository";
 import { CreateProductDTO, UpdateProductDTO } from "../dtos/product.dto";
 import { Types } from "mongoose";
@@ -11,7 +10,7 @@ export class ProductService {
   async addProduct(
     businessId: string,
     dto: CreateProductDTO,
-    image?: string
+    image?: string,
   ): Promise<ProductDocument> {
     const businessObjectId = new Types.ObjectId(businessId);
 
@@ -20,7 +19,7 @@ export class ProductService {
 
     const categoryObjectId = new Types.ObjectId(dto.category);
 
-    const { category, ...restOfDto } = dto; 
+    const { category, ...restOfDto } = dto;
 
     const product = await this.repository.create({
       business: businessObjectId,
@@ -34,9 +33,8 @@ export class ProductService {
   }
 
   async getBusinessProducts(businessId: string): Promise<ProductDocument[]> {
-   return this.repository.findByBusiness(businessId);
+    return this.repository.findByBusiness(businessId);
   }
-
 
   async getProductById(productId: string): Promise<ProductDocument | null> {
     return this.repository.findById(productId);
@@ -45,13 +43,13 @@ export class ProductService {
   async updateProduct(
     product: ProductDocument,
     dto: UpdateProductDTO,
-    image?: string
+    image?: string,
   ): Promise<ProductDocument> {
     if (dto.category) {
       const categoryExists = await Category.findById(dto.category);
       if (!categoryExists) throw new Error("Invalid category ID");
       product.category = new Types.ObjectId(dto.category);
-      delete dto.category; 
+      delete dto.category;
     }
 
     Object.assign(product, dto);

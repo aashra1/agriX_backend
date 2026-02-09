@@ -14,28 +14,24 @@ dotenv.config();
 const app: Application = express();
 const PORT = process.env.PORT;
 
-// CORS setup
 const corsOptions = {
   origin: true,
   credentials: true,
   optionSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
-//database connection
+
 connectDB();
 
-// Middleware
 app.use(bodyParser.json());
 
 app.use("/uploads", express.static(path.join(process.cwd(), "src/uploads")));
 
-// Register Routes
 app.use("/api/user", userRoutes);
 app.use("/api/business", businessRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/categories", categoryRoutes);
 
-// Start Server
 app.listen(PORT, () => {
   console.log(`Server running at: http://localhost:${PORT}`);
 });
