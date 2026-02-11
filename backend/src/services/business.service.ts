@@ -113,7 +113,7 @@ export class BusinessService {
     if (dto.action === "Approve") {
       business.businessVerified = true;
       business.businessStatus = "Approved";
-      business.rejectionReason = undefined; 
+      business.rejectionReason = undefined;
     } else {
       business.businessVerified = false;
       business.businessStatus = "Rejected";

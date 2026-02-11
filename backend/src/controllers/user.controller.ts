@@ -6,9 +6,9 @@ import { CreateUserDTO, LoginUserDTO, EditUserDTO } from "../dtos/user.dto";
 import { UserService } from "../services/user.service";
 import fs from "fs";
 
-export class UserController {
-  private userService = new UserService();
+const userService = new UserService();
 
+export class UserController {
   register = async (req: Request, res: Response) => {
     try {
       const validation = CreateUserDTO.safeParse(req.body);
@@ -36,7 +36,7 @@ export class UserController {
         profilePicture,
       };
 
-      const createdUser = await this.userService.createUser(newUser);
+      const createdUser = await userService.createUser(newUser);
       return res.status(201).json({
         success: true,
         message: `${role} registered successfully.`,
@@ -59,7 +59,7 @@ export class UserController {
       const { email, password } = validation.data;
 
       // Use the new Raw method to get the password for comparison
-      const userRaw = await this.userService.getUserRawByEmail(email);
+      const userRaw = await userService.getUserRawByEmail(email);
 
       const isMatched = await bcrypt.compare(password, userRaw.password);
 
@@ -79,7 +79,7 @@ export class UserController {
       });
 
       // Sanitize the raw user before returning it in the response
-      const safeUser = this.userService.getSanitizedUser(userRaw);
+      const safeUser = userService.getSanitizedUser(userRaw);
 
       return res.status(200).json({
         success: true,
@@ -94,7 +94,7 @@ export class UserController {
 
   getUserProfile = async (req: Request, res: Response) => {
     try {
-      const user = await this.userService.getUserById(req.params.userId);
+      const user = await userService.getUserById(req.params.userId);
       res.status(200).json({ success: true, profile: user });
     } catch (error: any) {
       res.status(404).json({ success: false, message: error.message });
@@ -113,7 +113,7 @@ export class UserController {
         updateData.profilePicture = `uploads/profiles/${req.file.filename}`;
       }
 
-      const updatedUser = await this.userService.updateUser(
+      const updatedUser = await userService.updateUser(
         req.params.userId,
         updateData,
       );
@@ -126,7 +126,7 @@ export class UserController {
 
   deleteUserAccount = async (req: Request, res: Response) => {
     try {
-      await this.userService.deleteUser(req.params.userId);
+      await userService.deleteUser(req.params.userId);
       res.status(200).json({ success: true, message: "User deleted" });
     } catch (error: any) {
       res.status(500).json({ success: false, message: error.message });
@@ -137,10 +137,44 @@ export class UserController {
     try {
       const page = Number(req.query.page) || 1;
       const limit = Number(req.query.limit) || 10;
-      const users = await this.userService.getAllUsers(page, limit);
+      const users = await userService.getAllUsers(page, limit);
       res.status(200).json({ success: true, count: users.length, users });
     } catch (error: any) {
       res.status(500).json({ success: false, message: error.message });
+    }
+  };
+
+  sendResetPasswordEmail = async (req: Request, res: Response) => {
+    try {
+      const email = req.body.email;
+      const user = await userService.sendResetPasswordEmail(email);
+      return res.status(200).json({
+        success: true,
+        data: user,
+        message: "If the email is registered, a reset link has been sent.",
+      });
+    } catch (error: Error | any) {
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  };
+
+  resetPassword = async (req: Request, res: Response) => {
+    try {
+      const token = req.params.token;
+      const { newPassword } = req.body;
+      await userService.resetPassword(token, newPassword);
+      return res.status(200).json({
+        success: true,
+        message: "Password has been reset successfully.",
+      });
+    } catch (error: Error | any) {
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
     }
   };
 }
