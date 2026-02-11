@@ -1,6 +1,6 @@
 import request from "supertest";
 import mongoose from "mongoose";
-import app from "../../../index";
+import app from "../../../app";
 import { UserModel } from "../../../model/user.model";
 
 const testUser = {

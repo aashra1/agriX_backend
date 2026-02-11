@@ -1,9 +1,9 @@
 import request from "supertest";
 import mongoose from "mongoose";
-import { ProductModel } from "../../../model/product.model";
+import { Product } from "../../../model/product.model";
 import { Category } from "../../../model/category.model";
 import jwt from "jsonwebtoken";
-import app from "../../..";
+import app from "../../../app";
 
 describe("Product Integration Tests", () => {
   let authToken: string;
@@ -33,7 +33,7 @@ describe("Product Integration Tests", () => {
   });
 
   afterAll(async () => {
-    await ProductModel.deleteMany({});
+    await Product.deleteMany({});
     await Category.deleteMany({});
     await mongoose.connection.close();
   });
@@ -61,7 +61,7 @@ describe("Product Integration Tests", () => {
       const response = await request(app)
         .post("/api/product")
         .set("Authorization", `Bearer ${authToken}`)
-        .send({ name: "Incomplete Product" }); 
+        .send({ name: "Incomplete Product" });
 
       expect(response.status).toBe(400);
       expect(response.body.message).toContain("required");

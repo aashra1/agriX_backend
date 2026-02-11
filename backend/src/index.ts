@@ -1,32 +1,10 @@
-import express, { Application } from "express";
-import bodyParser from "body-parser";
-import dotenv from "dotenv";
-import userRoutes from "./routes/user.route";
-import businessRoutes from "./routes/business.routes";
-import productRoutes from "./routes/product.routes";
-import categoryRoutes from "./routes/category.routes";
-import path from "path";
-import cors from "cors";
+import app from "./app";
+import connectDB from "./database/db";
 
-dotenv.config();
+const PORT = process.env.PORT || 5000;
 
-const app: Application = express();
+connectDB();
 
-let corsOptions = {
-  origin: ["http://localhost:3000"],
-  credentials: true,
-};
-
-// Middlewares
-app.use(cors(corsOptions));
-app.use(bodyParser.json());
-app.use("/uploads", express.static(path.join(process.cwd(), "src/uploads")));
-
-// Routes
-app.use("/api/user", userRoutes);
-app.use("/api/business", businessRoutes);
-app.use("/api/product", productRoutes);
-app.use("/api/categories", categoryRoutes);
-
-// Export app for testing
-export default app;
+app.listen(PORT, () => {
+  console.log(`Server running at: http://localhost:${PORT}`);
+});

@@ -2,7 +2,7 @@ import request from "supertest";
 import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import { UserModel } from "../../../model/user.model";
-import app from "../../../index";
+import app from "../../../app";
 
 const testUser = {
   fullName: "Test User",
@@ -16,7 +16,8 @@ describe("User Login Integration Tests", () => {
   beforeAll(async () => {
     if (mongoose.connection.readyState === 0) {
       await mongoose.connect(
-        process.env.MONGO_URI ||  "mongodb+srv://aashrapandey00:123PAssword@cluster0.0h1b7iy.mongodb.net/",
+        process.env.MONGO_URI ||
+          "mongodb+srv://aashrapandey00:123PAssword@cluster0.0h1b7iy.mongodb.net/",
       );
     }
 

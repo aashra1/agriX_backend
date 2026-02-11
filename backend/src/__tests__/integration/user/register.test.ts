@@ -1,7 +1,7 @@
 import request from "supertest";
 import mongoose from "mongoose";
 import { UserModel } from "../../../model/user.model";
-import app from "../../..";
+import app from "../../../app";
 
 describe("User Registration Integration Tests", () => {
   const validUser = {

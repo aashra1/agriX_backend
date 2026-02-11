@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 
 import dotenv from "dotenv";
 import { UserModel } from "../../../model/user.model";
-import app from "../../..";
+import app from "../../../app";
 
 dotenv.config({ path: ".env.test" });
 
