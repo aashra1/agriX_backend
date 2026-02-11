@@ -3,17 +3,17 @@ import mongoose from "mongoose";
 import app from "../../../app";
 import { Business } from "../../../model/business.model";
 
-describe("Business Registration Integration Tests", () => {
-  const validBusiness = {
-    businessName: "Agrix Farm",
-    email: "farm@agrix.com",
-    password: "Password@123",
-    phoneNumber: "9812345678",
-    address: "Chitwan, Nepal",
-    businessType: "Supplier",
-    ownerName: "John Doe",
+describe("Business Registration Tests", () => {
+  const testBusiness = {
+    businessName: "Green Grocers",
+    email: "green@test.com",
+    password: "Password123!",
+    phoneNumber: "9800000000",
+    address: "Kathmandu",
+    category: "Retail",
   };
 
+<<<<<<< HEAD
   beforeAll(async () => {
     if (mongoose.connection.readyState === 0) {
       await mongoose.connect(
@@ -26,16 +26,18 @@ describe("Business Registration Integration Tests", () => {
     await Business.deleteMany({});
   });
 
+=======
+>>>>>>> 38b956dd041565fa8c9ce76efabd3b4977ddae55
   afterAll(async () => {
-    await mongoose.connection.close();
+    await Business.deleteMany({ email: testBusiness.email });
   });
 
-  describe("POST /api/business/register", () => {
-    test("should register a business successfully without profile picture", async () => {
-      const response = await request(app)
-        .post("/api/business/register")
-        .send(validBusiness);
+  test("Should register a new business successfully", async () => {
+    const res = await request(app)
+      .post("/api/business/register")
+      .send(testBusiness);
 
+<<<<<<< HEAD
       expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
       expect(response.body.business).toHaveProperty(
@@ -94,5 +96,20 @@ describe("Business Registration Integration Tests", () => {
       expect(response.body.success).toBe(false);
       expect(response.body).toHaveProperty("message");
     });
+=======
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+    expect(res.body).toHaveProperty("tempToken");
+  });
+
+  test("Should fail to register business with existing email", async () => {
+    await request(app).post("/api/business/register").send(testBusiness);
+    const res = await request(app)
+      .post("/api/business/register")
+      .send(testBusiness);
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe("Business already exists");
+>>>>>>> 38b956dd041565fa8c9ce76efabd3b4977ddae55
   });
 });

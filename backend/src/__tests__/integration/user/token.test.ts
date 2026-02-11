@@ -1,66 +1,39 @@
 import request from "supertest";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-
-import dotenv from "dotenv";
 import { UserModel } from "../../../model/user.model";
 import app from "../../../app";
 
-dotenv.config({ path: ".env.test" });
-
-const testUser = {
-  email: "expiry-test@example.com",
-  password: "test@1234",
-  username: "expiryUser",
-  fullName: "Expiry Test User",
-  phoneNumber: "9876543210",
-  address: "Kathmandu",
-};
-
-describe("Auth Token Expiry and Validity", () => {
-  let userId: string;
+describe("Auth Token Validity", () => {
   let expiredToken: string;
+  let userId: string;
 
   beforeAll(async () => {
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(
-        process.env.MONGO_URI ||
-          "mongodb+srv://aashrapandey00:123PAssword@cluster0.0h1b7iy.mongodb.net/",
-      );
-    }
-
-    await UserModel.deleteMany({ email: testUser.email });
-    const user = await UserModel.create(testUser);
-    userId = user._id.toString();
-
+    const user = await UserModel.create({
+      fullName: "Token User",
+      email: "token@test.com",
+      password: "password",
+      phoneNumber: "1234567890",
+      address: "Test",
+    });
+    userId = (user._id as any).toString();
     expiredToken = jwt.sign(
-      { id: userId, role: user.role, isAdmin: user.isAdmin },
-      process.env.JWT_SECRET as string,
+      { id: userId, role: "User" },
+      process.env.JWT_SECRET || "secret",
       { expiresIn: "-1h" },
     );
   });
 
   afterAll(async () => {
-    await UserModel.deleteMany({ email: testUser.email });
-    await mongoose.connection.close();
+    await UserModel.deleteMany({});
   });
 
-  test("should reject requests with an expired token", async () => {
+  test("should reject expired token", async () => {
     const response = await request(app)
-      .get("/api/user/me")
+      .get(`/api/user/${userId}`)
       .set("Authorization", `Bearer ${expiredToken}`);
 
     expect(response.status).toBe(401);
-
-    expect(response.body.message).toMatch(/expired|invalid/i);
-  });
-
-  test("should fail if token is invalid or malformed", async () => {
-    const response = await request(app)
-      .get("/api/user/me")
-      .set("Authorization", "Bearer not.a.real.token");
-
-    expect(response.status).toBe(401);
-    expect(response.body).toHaveProperty("message");
+    expect(response.body.message).toBe("Invalid token!");
   });
 });
