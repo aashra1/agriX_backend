@@ -5,33 +5,28 @@ import userRoutes from "./routes/user.route";
 import businessRoutes from "./routes/business.routes";
 import productRoutes from "./routes/product.routes";
 import categoryRoutes from "./routes/category.routes";
-import connectDB from "./database/db";
 import path from "path";
 import cors from "cors";
 
 dotenv.config();
 
 const app: Application = express();
-const PORT = process.env.PORT;
 
 let corsOptions = {
   origin: ["http://localhost:3000"],
   credentials: true,
 };
 
+// Middlewares
 app.use(cors(corsOptions));
-
-connectDB();
-
 app.use(bodyParser.json());
-
 app.use("/uploads", express.static(path.join(process.cwd(), "src/uploads")));
 
+// Routes
 app.use("/api/user", userRoutes);
 app.use("/api/business", businessRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/categories", categoryRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server running at: http://localhost:${PORT}`);
-});
+// Export app for testing
+export default app;

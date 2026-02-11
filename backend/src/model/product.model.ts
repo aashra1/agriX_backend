@@ -33,7 +33,7 @@ const productSchema = new Schema<ProductDocument>(
   { timestamps: true },
 );
 
-export const Product = mongoose.model<ProductDocument>(
+export const ProductModel = mongoose.model<ProductDocument>(
   "Product",
   productSchema,
 );
