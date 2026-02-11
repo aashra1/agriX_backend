@@ -1,4 +1,7 @@
 import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const EMAIL_PASS = process.env.EMAIL_PASS as string;
 const EMAIL_USER = process.env.EMAIL_USER as string;
@@ -13,7 +16,7 @@ export const transporter = nodemailer.createTransport({
 
 export const sendEmail = async (to: string, subject: string, html: string) => {
   const mailOptions = {
-    from: `Agrix App <${EMAIL_USER}>`,
+    from: `ArtSphere <${EMAIL_USER}>`,
     to,
     subject,
     html,

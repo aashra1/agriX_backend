@@ -22,4 +22,7 @@ router.put(
   userController.editUserProfile,
 );
 
+router.post("/request-password-reset", userController.sendResetPasswordEmail);
+router.post("/reset-password/:token", userController.resetPassword);
+
 export default router;

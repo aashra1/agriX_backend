@@ -91,7 +91,7 @@ export class UserService {
     if (!user) {
       throw new HttpError(404, "User not found");
     }
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_TOKEN!, {
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET!, {
       expiresIn: "1h",
     });
     const resetLink = `${process.env.CLIENT_URL}/reset-password?token=${token}`;
@@ -105,7 +105,7 @@ export class UserService {
       if (!token || !newPassword) {
         throw new HttpError(400, "Token and new password are required");
       }
-      const decoded: any = jwt.verify(token, process.env.JWT_SECRET_TOKEN!);
+      const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
       const userId = decoded.id;
       const user = await this.userRepository.getUserById(userId);
       if (!user) {
