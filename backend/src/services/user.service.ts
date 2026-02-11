@@ -14,7 +14,6 @@ export class UserService {
     return safeUser;
   }
 
-  // Add this to allow the controller to sanitize at the end
   public getSanitizedUser(user: any) {
     return this.sanitizeUser(user);
   }

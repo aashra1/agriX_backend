@@ -1,14 +1,22 @@
-export interface CreateProductDTO {
-  name: string;
-  category: string;
-  brand?: string;
-  price: number;
-  discount?: number;
-  stock: number;
-  weight?: number;
-  unitType?: string;
-  shortDescription?: string;
-  fullDescription?: string;
-}
+import { z } from "zod";
+import { ProductSchema } from "../types/product.type";
 
-export interface UpdateProductDTO extends Partial<CreateProductDTO> {}
+export const CreateProductDto = ProductSchema.pick({
+  name: true,
+  category: true,
+  brand: true,
+  price: true,
+  discount: true,
+  stock: true,
+  weight: true,
+  unitType: true,
+  shortDescription: true,
+  fullDescription: true,
+  image: true,
+});
+
+export type CreateProductDto = z.infer<typeof CreateProductDto>;
+
+export const UpdateProductDto = CreateProductDto.partial();
+
+export type UpdateProductDto = z.infer<typeof UpdateProductDto>;

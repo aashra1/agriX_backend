@@ -1,12 +1,12 @@
 import { Types } from "mongoose";
 import { CategoryRepository } from "../repositories/category.repository";
-import { CreateCategoryDTO, UpdateCategoryDTO } from "../dtos/category.dto";
+import { CreateCategoryDto, UpdateCategoryDto } from "../dtos/category.dto";
 import { CategoryDocument } from "../model/category.model";
 
 export class CategoryService {
   private repository = new CategoryRepository();
 
-  async addCategory(dto: CreateCategoryDTO) {
+  async addCategory(dto: CreateCategoryDto) {
     let parentObjectId: Types.ObjectId | undefined;
     if (dto.parentCategory) {
       parentObjectId = new Types.ObjectId(dto.parentCategory);
@@ -27,7 +27,7 @@ export class CategoryService {
     return this.repository.findById(categoryId);
   }
 
-  async updateCategory(categoryDoc: CategoryDocument, dto: UpdateCategoryDTO) {
+  async updateCategory(categoryDoc: CategoryDocument, dto: UpdateCategoryDto) {
     if (dto.parentCategory) {
       categoryDoc.parentCategory = new Types.ObjectId(dto.parentCategory);
       delete dto.parentCategory;

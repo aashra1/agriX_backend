@@ -1,7 +1,10 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { ICategory } from "../types/category.type";
 
-export interface CategoryDocument extends ICategory, Document {}
+export interface CategoryDocument
+  extends Omit<ICategory, "parentCategory" | "_id">, Document {
+  parentCategory: mongoose.Types.ObjectId | null;
+}
 
 const categorySchema = new Schema<CategoryDocument>(
   {
@@ -11,6 +14,7 @@ const categorySchema = new Schema<CategoryDocument>(
       type: Schema.Types.ObjectId,
       ref: "Category",
       required: false,
+      default: null,
     },
   },
   { timestamps: true },

@@ -1,24 +1,37 @@
 import { z } from "zod";
+import { BusinessSchema } from "../types/business.type";
 
-export const RegisterBusinessDto = z.object({
-  businessName: z.string().min(1, "Business name is required"),
-  email: z.string().email("Invalid email address"),
-  phoneNumber: z.string().min(1, "Phone number is required"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  address: z.string().optional(),
+export const RegisterBusinessDto = BusinessSchema.pick({
+  businessName: true,
+  email: true,
+  phoneNumber: true,
+  password: true,
+  address: true,
+  profilePicture: true,
 });
 
 export type RegisterBusinessDto = z.infer<typeof RegisterBusinessDto>;
 
-export const LoginBusinessDto = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(1, "Password is required"),
+export const LoginBusinessDto = BusinessSchema.pick({
+  email: true,
+  password: true,
 });
 
 export type LoginBusinessDto = z.infer<typeof LoginBusinessDto>;
 
+export const EditBusinessDto = BusinessSchema.pick({
+  businessName: true,
+  email: true,
+  phoneNumber: true,
+  address: true,
+  profilePicture: true,
+}).partial();
+
+export type EditBusinessDto = z.infer<typeof EditBusinessDto>;
+
 export const ApproveBusinessDto = z.object({
   action: z.enum(["Approve", "Reject"]),
+  reason: z.string().optional(),
 });
 
 export type ApproveBusinessDto = z.infer<typeof ApproveBusinessDto>;

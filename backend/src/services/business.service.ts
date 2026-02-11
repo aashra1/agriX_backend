@@ -25,19 +25,27 @@ export class BusinessService {
   }
 
   register = async (dto: RegisterBusinessDto) => {
-    const { businessName, email, phoneNumber, password, address } = dto;
+    const {
+      businessName,
+      email,
+      phoneNumber,
+      password,
+      address,
+      profilePicture,
+    } = dto;
 
     const existing = await businessRepository.findByEmail(email);
     if (existing) throw new Error("Business already exists");
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const createdBusiness = await businessRepository.create({
+    const createdBusiness = await businessRepository.createBusiness({
       businessName,
       email,
       phoneNumber,
       password: hashedPassword,
       address,
+      profilePicture,
       businessStatus: "Pending",
     });
 
@@ -63,8 +71,9 @@ export class BusinessService {
     const isMatch = await bcrypt.compare(password, business.password);
     if (!isMatch) throw new Error("Invalid credentials");
 
-    if (business.businessStatus === "Pending")
+    if (business.businessStatus === "Pending" && !business.businessDocument)
       throw new Error("Please upload document and wait for admin approval");
+
     if (business.businessStatus === "Rejected")
       throw new Error("Business registration rejected by admin");
 
@@ -85,7 +94,7 @@ export class BusinessService {
     businessId: string,
     documentPath: string,
   ): Promise<BusinessDocument> => {
-    const business = await businessRepository.findById(businessId);
+    const business = await businessRepository.getBusinessById(businessId);
     if (!business) throw new Error("Business not found");
 
     business.businessDocument = documentPath;
@@ -98,15 +107,17 @@ export class BusinessService {
     businessId: string,
     dto: ApproveBusinessDto,
   ): Promise<BusinessDocument> => {
-    const business = await businessRepository.findById(businessId);
+    const business = await businessRepository.getBusinessById(businessId);
     if (!business) throw new Error("Business not found");
 
     if (dto.action === "Approve") {
       business.businessVerified = true;
       business.businessStatus = "Approved";
+      business.rejectionReason = undefined; 
     } else {
       business.businessVerified = false;
       business.businessStatus = "Rejected";
+      business.rejectionReason = dto.reason || "No reason provided";
     }
 
     return await businessRepository.save(business);
@@ -114,7 +125,7 @@ export class BusinessService {
 
   getAllBusinesses = async (page: number = 1, limit: number = 10) => {
     const skip = (page - 1) * limit;
-    const businesses = await businessRepository.findAll(skip, limit);
+    const businesses = await businessRepository.getAllBusinesses(skip, limit);
     return businesses.map((b) => this.sanitizeBusiness(b));
   };
 

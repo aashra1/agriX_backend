@@ -13,7 +13,6 @@ export class UserController {
     try {
       const validation = CreateUserDTO.safeParse(req.body);
       if (!validation.success) {
-        // If validation fails, delete the uploaded file immediately
         if (req.file) fs.unlinkSync(req.file.path);
         return res.status(400).json({ errors: validation.error });
       }

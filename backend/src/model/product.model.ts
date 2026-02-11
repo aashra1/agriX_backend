@@ -1,7 +1,11 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { IProduct } from "../types/product.type";
 
-export interface ProductDocument extends IProduct, Document {}
+export interface ProductDocument
+  extends Omit<IProduct, "business" | "category" | "_id">, Document {
+  business: mongoose.Types.ObjectId;
+  category: mongoose.Types.ObjectId;
+}
 
 const productSchema = new Schema<ProductDocument>(
   {

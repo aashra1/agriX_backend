@@ -7,9 +7,11 @@ export interface BusinessDocument extends Document {
   password: string;
   address?: string;
   role: string;
+  profilePicture?: string;
   businessDocument?: string;
   businessVerified: boolean;
   businessStatus: "Pending" | "Approved" | "Rejected";
+  rejectionReason?: string;
 }
 
 const businessSchema: Schema<BusinessDocument> = new Schema(
@@ -20,6 +22,7 @@ const businessSchema: Schema<BusinessDocument> = new Schema(
     password: { type: String, required: true },
     address: { type: String },
     role: { type: String, default: "Business" },
+    profilePicture: { type: String },
     businessDocument: { type: String },
     businessVerified: { type: Boolean, default: false },
     businessStatus: {
@@ -27,6 +30,7 @@ const businessSchema: Schema<BusinessDocument> = new Schema(
       enum: ["Pending", "Approved", "Rejected"],
       default: "Pending",
     },
+    rejectionReason: { type: String },
   },
   { timestamps: true },
 );

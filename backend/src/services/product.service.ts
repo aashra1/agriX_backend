@@ -1,5 +1,5 @@
 import { ProductRepository } from "../repositories/product.repository";
-import { CreateProductDTO, UpdateProductDTO } from "../dtos/product.dto";
+import { CreateProductDto, UpdateProductDto } from "../dtos/product.dto";
 import { Types } from "mongoose";
 import { ProductDocument } from "../model/product.model";
 import { Category } from "../model/category.model";
@@ -9,23 +9,17 @@ export class ProductService {
 
   async addProduct(
     businessId: string,
-    dto: CreateProductDTO,
+    dto: CreateProductDto,
     image?: string,
   ): Promise<ProductDocument> {
-    const businessObjectId = new Types.ObjectId(businessId);
-
     const categoryExists = await Category.findById(dto.category);
     if (!categoryExists) throw new Error("Invalid category ID");
 
-    const categoryObjectId = new Types.ObjectId(dto.category);
-
-    const { category, ...restOfDto } = dto;
-
     const product = await this.repository.create({
-      business: businessObjectId,
-      category: categoryObjectId,
-      ...restOfDto,
-      discount: restOfDto.discount ?? 0,
+      ...dto,
+      business: businessId as any,
+      category: dto.category as any,
+      discount: dto.discount ?? 0,
       image,
     });
 
@@ -42,17 +36,19 @@ export class ProductService {
 
   async updateProduct(
     product: ProductDocument,
-    dto: UpdateProductDTO,
+    dto: UpdateProductDto,
     image?: string,
   ): Promise<ProductDocument> {
     if (dto.category) {
       const categoryExists = await Category.findById(dto.category);
       if (!categoryExists) throw new Error("Invalid category ID");
-      product.category = new Types.ObjectId(dto.category);
-      delete dto.category;
+
+      (product as any).category = dto.category;
     }
 
-    Object.assign(product, dto);
+    const { category, ...updateData } = dto;
+    Object.assign(product, updateData);
+
     if (image) product.image = image;
 
     return this.repository.update(product);

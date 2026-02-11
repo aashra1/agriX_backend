@@ -1,29 +1,52 @@
 import { Business, BusinessDocument } from "../model/business.model";
 
 export interface IBusinessRepository {
-  findAll(skip?: number, limit?: number): Promise<BusinessDocument[]>;
-  findById(id: string): Promise<BusinessDocument | null>;
+  getAllBusinesses(skip?: number, limit?: number): Promise<BusinessDocument[]>;
+  getBusinessById(id: string): Promise<BusinessDocument | null>;
+  getBusinessByEmail(email: string): Promise<BusinessDocument | null>;
   findByEmail(email: string): Promise<BusinessDocument | null>;
-  create(business: Partial<BusinessDocument>): Promise<BusinessDocument>;
+  createBusiness(
+    business: Partial<BusinessDocument>,
+  ): Promise<BusinessDocument>;
+  updateBusiness(
+    id: string,
+    updatedData: Partial<BusinessDocument>,
+  ): Promise<BusinessDocument | null>;
+  deleteBusiness(id: string): Promise<BusinessDocument | null>;
   save(business: BusinessDocument): Promise<BusinessDocument>;
 }
 
 export class BusinessRepository implements IBusinessRepository {
-  async findAll(skip: number = 0, limit: number = 10) {
+  async getAllBusinesses(skip: number = 0, limit: number = 10) {
     return Business.find().skip(skip).limit(limit).exec();
   }
 
-  async findById(id: string) {
+  async getBusinessById(id: string) {
     return Business.findById(id).exec();
+  }
+
+  async getBusinessByEmail(email: string) {
+    return Business.findOne({ email }).exec();
   }
 
   async findByEmail(email: string) {
     return Business.findOne({ email }).exec();
   }
 
-  async create(business: Partial<BusinessDocument>) {
+  async createBusiness(business: Partial<BusinessDocument>) {
     const newBusiness = new Business(business);
     return newBusiness.save();
+  }
+
+  async updateBusiness(
+    id: string,
+    data: Partial<BusinessDocument>,
+  ): Promise<BusinessDocument | null> {
+    return await Business.findByIdAndUpdate(id, data, { new: true }).exec();
+  }
+
+  async deleteBusiness(id: string) {
+    return Business.findByIdAndDelete(id).exec();
   }
 
   async save(business: BusinessDocument) {

@@ -16,7 +16,13 @@ export class BusinessController {
         return res.status(400).json({ errors: validation.error });
       }
 
-      const result = await this.businessService.register(validation.data);
+      const profilePicture = req.file ? req.file.path : undefined;
+
+      const result = await this.businessService.register({
+        ...validation.data,
+        profilePicture,
+      });
+
       return res.status(201).json({ success: true, ...result });
     } catch (error: any) {
       return res.status(400).json({ success: false, message: error.message });
@@ -69,6 +75,7 @@ export class BusinessController {
     try {
       const { businessId } = req.params;
       const validation = ApproveBusinessDto.safeParse(req.body);
+
       if (!validation.success) {
         return res.status(400).json({ errors: validation.error });
       }
@@ -77,10 +84,17 @@ export class BusinessController {
         businessId,
         validation.data,
       );
+
       return res.status(200).json({
         success: true,
-        message: `Business ${validation.data.action}d successfully`,
-        businessStatus: updated.businessStatus,
+        message: `Business ${validation.data.action} successfully`,
+        data: {
+          businessStatus: updated.businessStatus,
+          businessVerified: updated.businessVerified,
+          ...(updated.rejectionReason && {
+            rejectionReason: updated.rejectionReason,
+          }),
+        },
       });
     } catch (error: any) {
       return res.status(400).json({ success: false, message: error.message });
