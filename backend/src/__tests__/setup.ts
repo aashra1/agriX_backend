@@ -1,10 +1,19 @@
+import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
-import connectDB from "../database/db";
+
+jest.setTimeout(30000);
+
+let mongod: MongoMemoryServer;
 
 beforeAll(async () => {
-  await connectDB();
+  mongod = await MongoMemoryServer.create();
+  const uri = mongod.getUri();
+  await mongoose.connect(uri);
+  console.log(`TEST ENV ACTIVE | DB: ${mongoose.connection.name}`);
 });
 
 afterAll(async () => {
+  await mongoose.connection.dropDatabase();
   await mongoose.connection.close();
+  await mongod.stop();
 });

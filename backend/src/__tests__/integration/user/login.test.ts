@@ -14,19 +14,16 @@ const testUser = {
 
 describe("User Login Integration Tests", () => {
   beforeAll(async () => {
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(
-        process.env.MONGO_URI || "mongodb://localhost:27017/testdb",
-      );
-    }
-    await UserModel.deleteMany({ email: testUser.email });
     const hashedPassword = await bcrypt.hash(testUser.password, 10);
-    await UserModel.create({ ...testUser, password: hashedPassword });
+    await UserModel.create({
+      fullName: testUser.fullName,
+      email: testUser.email,
+      password: hashedPassword,
+      phoneNumber: testUser.phoneNumber,
+    });
   });
-
   afterAll(async () => {
     await UserModel.deleteMany({ email: testUser.email });
-    await mongoose.connection.close();
   });
 
   describe("POST /api/user/login", () => {

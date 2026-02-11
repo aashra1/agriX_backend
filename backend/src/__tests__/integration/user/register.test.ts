@@ -13,20 +13,11 @@ describe("User Registration Integration Tests", () => {
   };
 
   beforeAll(async () => {
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(
-        process.env.MONGO_URI || "mongodb://localhost:27017/testdb",
-      );
-    }
-    await UserModel.deleteMany({ email: validUser.email });
-  });
-
-  afterEach(async () => {
     await UserModel.deleteMany({ email: validUser.email });
   });
 
   afterAll(async () => {
-    await mongoose.connection.close();
+    await UserModel.deleteMany({ email: validUser.email });
   });
 
   test("should register successfully", async () => {

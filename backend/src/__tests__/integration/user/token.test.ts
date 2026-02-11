@@ -9,11 +9,6 @@ describe("Auth Token Validity", () => {
   let userId: string;
 
   beforeAll(async () => {
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(
-        process.env.MONGO_URI || "mongodb://localhost:27017/testdb",
-      );
-    }
     const user = await UserModel.create({
       fullName: "Token User",
       email: "token@test.com",
@@ -31,7 +26,6 @@ describe("Auth Token Validity", () => {
 
   afterAll(async () => {
     await UserModel.deleteMany({});
-    await mongoose.connection.close();
   });
 
   test("should reject expired token", async () => {
