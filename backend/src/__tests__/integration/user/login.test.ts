@@ -1,11 +1,10 @@
 import request from "supertest";
 import bcrypt from "bcrypt";
-import mongoose from "mongoose";
 import { UserModel } from "../../../model/user.model";
 import app from "../../../app";
 
 const testUser = {
-  fullName: "Test User",
+  fullName: "Test Login User",
   email: "test_login@example.com",
   password: "test@1234",
   phoneNumber: "9876543210",
@@ -14,47 +13,60 @@ const testUser = {
 
 describe("User Login Integration Tests", () => {
   beforeAll(async () => {
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(
-<<<<<<< HEAD
-        process.env.MONGO_URI ||
-          "mongodb+srv://aashrapandey00:123PAssword@cluster0.0h1b7iy.mongodb.net/",
-=======
-        process.env.MONGO_URI || "mongodb://localhost:27017/testdb",
->>>>>>> 269c61a (Add /me endpoints for user profile operations)
-      );
-    }
     await UserModel.deleteMany({ email: testUser.email });
     const hashedPassword = await bcrypt.hash(testUser.password, 10);
-    await UserModel.create({ ...testUser, password: hashedPassword });
+    await UserModel.create({
+      ...testUser,
+      password: hashedPassword,
+      role: "User",
+      isAdmin: false,
+    });
   });
 
   afterAll(async () => {
     await UserModel.deleteMany({ email: testUser.email });
-    await mongoose.connection.close();
   });
 
   describe("POST /api/user/login", () => {
-    test("should log in the user successfully", async () => {
-      const response = await request(app)
-        .post("/api/user/login")
-        .send({ email: testUser.email, password: testUser.password });
+    test("should log in the user successfully and return a token", async () => {
+      const response = await request(app).post("/api/user/login").send({
+        email: testUser.email,
+        password: testUser.password,
+      });
+
       expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
       expect(response.body.message).toBe("Login successful");
       expect(response.body).toHaveProperty("token");
+      expect(response.body.user).toHaveProperty("email", testUser.email);
     });
 
-    test("should fail for wrong password", async () => {
-      const response = await request(app)
-        .post("/api/user/login")
-        .send({ email: testUser.email, password: "wrongpassword" });
+    test("should fail for wrong password with 401 status", async () => {
+      const response = await request(app).post("/api/user/login").send({
+        email: testUser.email,
+        password: "wrongpassword",
+      });
+
       expect(response.status).toBe(401);
+      expect(response.body.success).toBe(false);
       expect(response.body.message).toBe("Invalid credentials");
     });
 
-    test("should fail to login user with empty fields", async () => {
+    test("should fail to login with empty body and return 400 (validation error)", async () => {
       const response = await request(app).post("/api/user/login").send({});
+
       expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty("errors");
+    });
+
+    test("should fail for a non-existent email", async () => {
+      const response = await request(app).post("/api/user/login").send({
+        email: "nonexistent@test.com",
+        password: "password123",
+      });
+
+      expect(response.status).toBe(500);
+      expect(response.body.success).toBe(false);
     });
   });
 });

@@ -3,13 +3,15 @@ import app from "../../../app";
 import { Business } from "../../../model/business.model";
 import bcrypt from "bcrypt";
 
-describe("Business Login Integration", () => {
+describe("Business Login Integration Tests", () => {
   const loginCredentials = {
     email: "loginbiz@test.com",
     password: "Password123!",
   };
 
   beforeAll(async () => {
+    await Business.deleteMany({ email: loginCredentials.email });
+
     const hashedPassword = await bcrypt.hash(loginCredentials.password, 10);
     await Business.create({
       businessName: "Login Test Biz",
@@ -28,7 +30,7 @@ describe("Business Login Integration", () => {
     await Business.deleteMany({ email: loginCredentials.email });
   });
 
-  test("POST /api/business/login - Should log in successfully and return a token", async () => {
+  test("should log in successfully and return a token", async () => {
     const res = await request(app).post("/api/business/login").send({
       email: loginCredentials.email,
       password: loginCredentials.password,
@@ -40,7 +42,7 @@ describe("Business Login Integration", () => {
     expect(res.body.message).toBe("Business logged in successfully");
   });
 
-  test("Extra: POST /api/business/login - Should fail with incorrect password", async () => {
+  test("should fail with incorrect password", async () => {
     const res = await request(app).post("/api/business/login").send({
       email: loginCredentials.email,
       password: "WrongPassword123",
@@ -49,5 +51,28 @@ describe("Business Login Integration", () => {
     expect(res.status).toBe(400);
     expect(res.body.success).toBe(false);
     expect(res.body.message).toBe("Invalid credentials");
+  });
+
+  test("should fail for business that has not uploaded documents", async () => {
+    const unverifiedEmail = "unverified@test.com";
+    await Business.create({
+      businessName: "Unverified Biz",
+      email: unverifiedEmail,
+      password: await bcrypt.hash("password", 10),
+      phoneNumber: "9800000000",
+      address: "Kathmandu",
+      businessStatus: "Pending",
+      role: "Business",
+    });
+
+    const res = await request(app).post("/api/business/login").send({
+      email: unverifiedEmail,
+      password: "password",
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toContain("Please upload document");
+
+    await Business.deleteOne({ email: unverifiedEmail });
   });
 });
