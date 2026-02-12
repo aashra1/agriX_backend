@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { UserController } from "../controllers/user.controller";
+import { authGuard, authGuardAdmin } from "../middleware/authGuard";
 import uploadProfilePicture from "../multer/user.multer";
-import { authGuard } from "../middleware/authGuard";
 
 const router = Router();
 const userController = new UserController();
 
+// Public routes
 router.post(
   "/register",
   uploadProfilePicture.single("profilePicture"),
@@ -13,10 +14,15 @@ router.post(
 );
 
 router.post("/login", userController.loginUser);
-router.get("/", userController.getAllUsers);
+
+router.post("/request-password-reset", userController.sendResetPasswordEmail);
+
+router.post("/reset-password/:token", userController.resetPassword);
+
+// Protected routes (require authentication)
+router.put("/change-password", authGuard, userController.changePassword);
 
 router.get("/:userId", authGuard, userController.getUserProfile);
-router.delete("/:userId", authGuard, userController.deleteUserAccount);
 
 router.put(
   "/:userId",
@@ -25,7 +31,9 @@ router.put(
   userController.editUserProfile,
 );
 
-router.post("/request-password-reset", userController.sendResetPasswordEmail);
-router.post("/reset-password/:token", userController.resetPassword);
+router.delete("/:userId", authGuard, userController.deleteUserAccount);
+
+// Admin only routes
+router.get("/", authGuard, authGuardAdmin, userController.getAllUsers);
 
 export default router;
