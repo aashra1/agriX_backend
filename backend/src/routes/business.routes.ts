@@ -24,4 +24,8 @@ router.put(
 
 router.get("/admin/all", authGuardAdmin, businessController.getAll);
 
+router.get("/profile", authGuard, businessController.getProfile);
+
+router.put("/profile/edit", authGuard, businessController.editProfile);
+
 export default router;

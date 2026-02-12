@@ -2,7 +2,12 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { User } from "../types/user.type";
-import { CreateUserDTO, LoginUserDTO, EditUserDTO } from "../dtos/user.dto";
+import {
+  CreateUserDTO,
+  LoginUserDTO,
+  EditUserDTO,
+  ChangePasswordDTO,
+} from "../dtos/user.dto";
 import { UserService } from "../services/user.service";
 import fs from "fs";
 
@@ -174,6 +179,36 @@ export class UserController {
       return res.status(error.statusCode ?? 500).json({
         success: false,
         message: error.message || "Internal Server Error",
+      });
+    }
+  };
+
+  changePassword = async (req: Request, res: Response) => {
+    try {
+      const validation = ChangePasswordDTO.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ errors: validation.error });
+      }
+
+      const { currentPassword, newPassword } = validation.data;
+      const userId = (req as any).user?.id; // From auth middleware
+
+      if (!userId) {
+        return res
+          .status(401)
+          .json({ success: false, message: "Unauthorized" });
+      }
+
+      await userService.changePassword(userId, currentPassword, newPassword);
+
+      return res.status(200).json({
+        success: true,
+        message: "Password changed successfully",
+      });
+    } catch (error: any) {
+      return res.status(400).json({
+        success: false,
+        message: error.message || "Failed to change password",
       });
     }
   };

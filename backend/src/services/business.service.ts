@@ -134,4 +134,31 @@ export class BusinessService {
     if (!business) throw new Error("Business not found");
     return business;
   };
+
+  getBusinessProfile = async (businessId: string) => {
+    const business = await businessRepository.getBusinessById(businessId);
+    if (!business) throw new Error("Business not found");
+
+    return this.sanitizeBusiness(business);
+  };
+
+  editBusinessProfile = async (
+    businessId: string,
+    updateData: Partial<RegisterBusinessDto>,
+  ) => {
+    const { password, email, ...allowedUpdates } = updateData;
+
+    const updatedBusiness = await businessRepository.updateBusiness(
+      businessId,
+      allowedUpdates,
+    );
+
+    if (!updatedBusiness)
+      throw new Error("Business not found or update failed");
+
+    return {
+      message: "Profile updated successfully",
+      business: this.sanitizeBusiness(updatedBusiness),
+    };
+  };
 }
