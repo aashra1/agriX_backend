@@ -42,7 +42,11 @@ export class BusinessRepository implements IBusinessRepository {
     id: string,
     data: Partial<BusinessDocument>,
   ): Promise<BusinessDocument | null> {
-    return await Business.findByIdAndUpdate(id, data, { new: true }).exec();
+    return await Business.findByIdAndUpdate(
+      id,
+      { $set: data },
+      { new: true },
+    ).exec();
   }
 
   async deleteBusiness(id: string) {
