@@ -14,6 +14,16 @@ const testUser = {
 
 describe("User Login Integration Tests", () => {
   beforeAll(async () => {
+<<<<<<< HEAD
+    if (mongoose.connection.readyState === 0) {
+      await mongoose.connect(
+        process.env.MONGO_URI ||
+          "mongodb+srv://aashrapandey00:123PAssword@cluster0.0h1b7iy.mongodb.net/",
+      );
+    }
+
+=======
+>>>>>>> 38b956dd041565fa8c9ce76efabd3b4977ddae55
     const hashedPassword = await bcrypt.hash(testUser.password, 10);
     await UserModel.create({
       fullName: testUser.fullName,
