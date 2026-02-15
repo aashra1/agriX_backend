@@ -5,6 +5,9 @@ import uploadProductImage from "../multer/product.multer";
 
 const router = Router();
 
+router.get("/category/:categoryId", productController.getProductsByCategory);
+router.get("/:id", productController.getProductById);
+
 router.post(
   "/",
   authGuard,
@@ -18,13 +21,6 @@ router.get(
   authGuard,
   authGuardBusiness,
   productController.getBusinessProducts,
-);
-
-router.get(
-  "/:id",
-  authGuard,
-  authGuardBusiness,
-  productController.getProductById,
 );
 
 router.put(

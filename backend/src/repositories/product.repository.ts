@@ -14,6 +14,12 @@ export class ProductRepository {
     return Product.findById(productId).populate("category", "name");
   }
 
+  findByCategory(categoryId: string) {
+    return Product.find({ category: categoryId })
+      .populate("category", "name")
+      .populate("business", "businessName logo");
+  }
+
   update(product: ProductDocument) {
     return product.save();
   }

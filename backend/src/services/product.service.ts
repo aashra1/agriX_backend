@@ -34,6 +34,14 @@ export class ProductService {
     return this.repository.findById(productId);
   }
 
+  // Add this new method
+  async getProductsByCategory(categoryId: string): Promise<ProductDocument[]> {
+    const categoryExists = await Category.findById(categoryId);
+    if (!categoryExists) throw new Error("Category not found");
+
+    return this.repository.findByCategory(categoryId);
+  }
+
   async updateProduct(
     product: ProductDocument,
     dto: UpdateProductDto,

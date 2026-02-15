@@ -49,6 +49,26 @@ export const getProductById = async (req: Request, res: Response) => {
   res.json({ success: true, product });
 };
 
+// Add this new controller method
+export const getProductsByCategory = async (req: Request, res: Response) => {
+  try {
+    const { categoryId } = req.params;
+
+    const products = await productService.getProductsByCategory(categoryId);
+
+    res.json({
+      success: true,
+      count: products.length,
+      products,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Server Error",
+    });
+  }
+};
+
 export const updateProduct = async (req: Request, res: Response) => {
   const product = await productService.getProductById(req.params.id);
   if (!product)
