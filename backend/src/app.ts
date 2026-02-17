@@ -8,6 +8,7 @@ import categoryRoutes from "./routes/category.routes";
 import path from "path";
 import cors from "cors";
 import cartRoutes from "./routes/cart.routes";
+import orderRoutes from "./routes/order.routes";
 
 dotenv.config();
 
@@ -29,5 +30,6 @@ app.use("/api/business", businessRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/order", orderRoutes);
 
 export default app;
