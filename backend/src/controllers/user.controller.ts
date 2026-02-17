@@ -48,7 +48,6 @@ export class UserController {
         user: createdUser,
       });
     } catch (error: any) {
-      // If database save fails, delete the uploaded file
       if (req.file) fs.unlinkSync(req.file.path);
       return res.status(500).json({ success: false, message: error.message });
     }
@@ -63,7 +62,6 @@ export class UserController {
 
       const { email, password } = validation.data;
 
-      // Use the new Raw method to get the password for comparison
       const userRaw = await userService.getUserRawByEmail(email);
 
       const isMatched = await bcrypt.compare(password, userRaw.password);
@@ -83,7 +81,6 @@ export class UserController {
         expiresIn: "1h",
       });
 
-      // Sanitize the raw user before returning it in the response
       const safeUser = userService.getSanitizedUser(userRaw);
 
       return res.status(200).json({
@@ -94,6 +91,43 @@ export class UserController {
       });
     } catch (error: any) {
       return res.status(500).json({ success: false, message: error.message });
+    }
+  };
+
+  getMyProfile = async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const user = await userService.getUserById(userId);
+      res.status(200).json({ success: true, profile: user });
+    } catch (error: any) {
+      res.status(404).json({ success: false, message: error.message });
+    }
+  };
+
+  editMyProfile = async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+
+      const validation = EditUserDTO.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ errors: validation.error });
+      }
+
+      const updateData: Partial<User> = { ...validation.data };
+
+      if (req.file) {
+        updateData.profilePicture = `uploads/profiles/${req.file.filename}`;
+      }
+
+      const updatedUser = await userService.updateUser(userId, updateData);
+
+      res.status(200).json({
+        success: true,
+        message: "Profile updated successfully",
+        user: updatedUser,
+      });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
     }
   };
 
@@ -191,7 +225,7 @@ export class UserController {
       }
 
       const { currentPassword, newPassword } = validation.data;
-      const userId = (req as any).user?.id; // From auth middleware
+      const userId = (req as any).user?.id;
 
       if (!userId) {
         return res
