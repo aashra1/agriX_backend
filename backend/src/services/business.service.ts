@@ -78,10 +78,21 @@ export class BusinessService {
       throw new Error("Business registration rejected by admin");
 
     const token = jwt.sign(
-      { id: business._id, role: business.role },
+      {
+        id: business._id,
+        role: business.role,
+        businessId: business._id,
+      },
       process.env.JWT_SECRET as string,
       { expiresIn: "1h" },
     );
+
+    console.log("🎯 Raw business from DB:", {
+      _id: business._id,
+      id: (business as any).id,
+      role: business.role,
+      businessName: business.businessName,
+    });
 
     return {
       business: this.sanitizeBusiness(business),
