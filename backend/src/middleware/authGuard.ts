@@ -9,20 +9,21 @@ declare global {
     interface Request {
       user?: {
         id: string;
-        role: "Business" | "Admin";
+        role: "User" | "Business" | "Admin";
         permissions?: string[];
         isAdmin?: boolean;
+        businessId?: string;
       };
     }
   }
 }
 
-// JWT payload type
 interface JwtPayload {
   id: string;
-  role: "Business" | "Admin";
+  role: "User" | "Business" | "Admin";
   permissions?: string[];
   isAdmin?: boolean;
+  businessId?: string;
 }
 
 export const authGuard = (req: Request, res: Response, next: NextFunction) => {
@@ -37,19 +38,34 @@ export const authGuard = (req: Request, res: Response, next: NextFunction) => {
     return res.status(401).json({ success: false, message: "Token missing!" });
 
   try {
+    console.log("🔐 Verifying token:", token.substring(0, 30) + "...");
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET as string,
     ) as JwtPayload;
+
+    console.log(
+      "📦 Decoded token payload FULL:",
+      JSON.stringify(decoded, null, 2),
+    );
+    console.log("📦 Decoded token keys:", Object.keys(decoded));
+    console.log("📦 Decoded token id:", decoded.id);
+    console.log("📦 Decoded token _id:", (decoded as any)._id);
+    console.log("📦 Decoded token businessId:", decoded.businessId);
+    console.log("📦 Decoded token role:", decoded.role);
+
     req.user = {
       id: decoded.id,
       role: decoded.role,
       permissions: decoded.permissions,
       isAdmin: decoded.isAdmin,
+      ...(decoded.businessId && { businessId: decoded.businessId }),
     };
+
+    console.log("👤 Set req.user:", req.user);
     next();
   } catch (error) {
-    console.error("Invalid token!", error);
+    console.error("❌ Invalid token!", error);
     return res.status(401).json({ success: false, message: "Invalid token!" });
   }
 };
@@ -61,7 +77,6 @@ export const authGuardAdmin = (
 ) => {
   const authHeader = req.headers.authorization;
 
-  // 1. Check if Authorization header exists
   if (!authHeader) {
     return res
       .status(401)
@@ -78,11 +93,13 @@ export const authGuardAdmin = (
       token,
       process.env.JWT_SECRET as string,
     ) as JwtPayload;
+
     req.user = {
       id: decoded.id,
       role: decoded.role,
       permissions: decoded.permissions,
       isAdmin: decoded.isAdmin,
+      ...(decoded.businessId && { businessId: decoded.businessId }),
     };
 
     if (req.user.role !== "Admin" && req.user.isAdmin !== true) {
@@ -106,10 +123,12 @@ export const authGuardBusiness = (
     return res
       .status(401)
       .json({ success: false, message: "Unauthorized! No user data found." });
+
   if (req.user.role !== "Business")
     return res.status(403).json({
       success: false,
       message: "Access denied! Only business users allowed.",
     });
+
   next();
 };
