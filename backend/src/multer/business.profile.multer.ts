@@ -33,6 +33,6 @@ const fileFilter = (
 };
 
 // Multer instance
-const uploadBusinessDoc = multer({ storage, fileFilter });
+const uploadBusinessProfilePicture = multer({ storage, fileFilter });
 
-export default uploadBusinessDoc;
+export default uploadBusinessProfilePicture;
