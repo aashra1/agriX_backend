@@ -1,82 +1,102 @@
+// services/wallet.service.ts
+import { WalletRepository } from "../repositories/wallet.repository";
+import {
+  CreditWalletDTO,
+  DebitWalletDTO,
+  WalletFilterDTO,
+} from "../dtos/wallet.dto";
 import { HttpError } from "../error/http-error";
-import mongoose from "mongoose";
 
 export class WalletService {
   private walletRepository = new WalletRepository();
 
-  async ensureWallet(userId: string) {
-    let wallet = await this.walletRepository.getWalletByUserId(userId);
+  async ensureWallet(ownerId: string, ownerType: "User" | "Business") {
+    let wallet = await this.walletRepository.getWalletByOwner(
+      ownerId,
+      ownerType,
+    );
     if (!wallet) {
-      wallet = await this.walletRepository.createWallet(userId);
+      wallet = await this.walletRepository.createWallet({
+        ownerId,
+        ownerType,
+        currency: "NPR",
+      });
     }
     return wallet;
   }
 
-  async creditUser(
-    userId: string,
-    amount: number,
-    reference: string,
-    description: string,
-    session?: any,
-  ) {
-    const wallet = await this.ensureWallet(userId);
+  async creditUser(data: CreditWalletDTO, session?: any) {
+    console.log("Crediting:", {
+      ownerId: data.ownerId,
+      ownerType: data.ownerType,
+    });
+
+    const wallet = await this.ensureWallet(data.ownerId, data.ownerType);
 
     const updatedWallet = await this.walletRepository.updateBalance(
-      userId,
-      amount,
+      data.ownerId,
+      data.ownerType,
+      data.amount,
       session,
     );
 
-    await this.walletRepository.createTransaction({
-      wallet: wallet._id,
+    const transaction = await this.walletRepository.createTransaction({
+      wallet: wallet._id.toString(),
       type: "credit",
-      amount,
+      amount: data.amount,
       balance: updatedWallet!.balance,
-      reference,
-      description,
+      reference: data.reference,
+      description: data.description,
+      metadata: data.metadata,
     });
 
-    return updatedWallet;
+    return { wallet: updatedWallet, transaction };
   }
 
-  async debitUser(
-    userId: string,
-    amount: number,
-    reference: string,
-    description: string,
-    session?: any,
+  async getBalance(ownerId: string, ownerType: "User" | "Business") {
+    const wallet = await this.ensureWallet(ownerId, ownerType);
+    return {
+      balance: wallet.balance,
+      currency: wallet.currency,
+    };
+  }
+
+  async getTransactions(
+    ownerId: string,
+    ownerType: "User" | "Business",
+    filter: WalletFilterDTO,
   ) {
-    const wallet = await this.ensureWallet(userId);
-
-    if (wallet.balance < amount) {
-      throw new HttpError(400, "Insufficient balance");
-    }
-
-    const updatedWallet = await this.walletRepository.updateBalance(
-      userId,
-      -amount,
-      session,
+    const skip = (filter.page - 1) * filter.limit;
+    const result = await this.walletRepository.getTransactions(
+      ownerId,
+      ownerType,
+      skip,
+      filter.limit,
     );
 
-    await this.walletRepository.createTransaction({
-      wallet: wallet._id,
-      type: "debit",
-      amount,
-      balance: updatedWallet!.balance,
-      reference,
-      description,
-    });
-
-    return updatedWallet;
+    return {
+      transactions: result.transactions,
+      pagination: {
+        page: filter.page,
+        limit: filter.limit,
+        total: result.total,
+        pages: Math.ceil(result.total / filter.limit),
+      },
+    };
   }
 
-  async getBalance(userId: string) {
-    const wallet = await this.ensureWallet(userId);
-    return wallet.balance;
-  }
-
-  async getTransactions(userId: string, page: number = 1, limit: number = 10) {
-    const skip = (page - 1) * limit;
-    return await this.walletRepository.getTransactions(userId, skip, limit);
+  // Keep these for backward compatibility
+  async creditUserOld(data: any, session?: any) {
+    return this.creditUser(
+      {
+        ownerId: data.userId,
+        ownerType: "User",
+        amount: data.amount,
+        reference: data.reference,
+        description: data.description,
+        metadata: data.metadata,
+      },
+      session,
+    );
   }
 }
