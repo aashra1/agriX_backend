@@ -10,6 +10,7 @@ import cors from "cors";
 import cartRoutes from "./routes/cart.routes";
 import orderRoutes from "./routes/order.routes";
 import paymentRoutes from "./routes/payment.routes";
+import walletRoutes from "./routes/wallet.routes";
 
 dotenv.config();
 
@@ -33,5 +34,6 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/order", orderRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/wallets", walletRoutes);
 
 export default app;
