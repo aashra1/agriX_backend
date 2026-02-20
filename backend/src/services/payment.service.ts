@@ -2,24 +2,28 @@ import {
   PaymentRepository,
   IPaymentRepository,
 } from "../repositories/payment.repository";
-import { OrderRepository } from "../repositories/order.repository"; // Add this import
+import { OrderRepository } from "../repositories/order.repository";
 import {
   UserRepository,
   IUserRepository,
 } from "../repositories/user.repository";
+import { WalletService } from "../services/wallet.service";
 import { CreatePaymentDTO, UpdatePaymentDTO } from "../dtos/payment.dto";
 import { initiateKhaltiPayment, verifyKhaltiPayment } from "../config/khalti";
 import { HttpError } from "../error/http-error";
+import mongoose from "mongoose";
 
 export class PaymentService {
   private paymentRepository: IPaymentRepository;
   private userRepository: IUserRepository;
-  private orderRepository: OrderRepository; // Add this
+  private orderRepository: OrderRepository;
+  private walletService: WalletService;
 
   constructor() {
     this.paymentRepository = new PaymentRepository();
     this.userRepository = new UserRepository();
-    this.orderRepository = new OrderRepository(); // Initialize it
+    this.orderRepository = new OrderRepository();
+    this.walletService = new WalletService();
   }
 
   private sanitizePayment(payment: any) {
@@ -94,63 +98,103 @@ export class PaymentService {
   };
 
   verifyKhaltiPayment = async (pidx: string, orderId: string) => {
-    const payment = await this.paymentRepository.getPaymentByPidx(pidx);
-    if (!payment) {
-      throw new HttpError(404, "Payment record not found");
-    }
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    if (payment.orderId !== orderId) {
-      throw new HttpError(400, "Order ID mismatch");
-    }
+    try {
+      const payment = await this.paymentRepository.getPaymentByPidx(pidx);
+      if (!payment) {
+        throw new HttpError(404, "Payment record not found");
+      }
 
-    if (payment.status === "completed") {
-      return {
-        success: true,
-        message: "Payment already verified",
-        payment: this.sanitizePayment(payment),
-      };
-    }
+      if (payment.orderId !== orderId) {
+        throw new HttpError(400, "Order ID mismatch");
+      }
 
-    const verificationData = await verifyKhaltiPayment(pidx);
+      if (payment.status === "completed") {
+        await session.abortTransaction();
+        session.endSession();
+        return {
+          success: true,
+          message: "Payment already verified",
+          payment: this.sanitizePayment(payment),
+        };
+      }
 
-    if (verificationData.status === "Completed") {
-      const updateData: UpdatePaymentDTO = {
-        status: "completed",
-        transactionId: verificationData.transaction_id,
-        metadata: verificationData,
-      };
+      const verificationData = await verifyKhaltiPayment(pidx);
 
-      const updatedPayment = await this.paymentRepository.updatePayment(
-        payment._id!.toString(),
-        updateData,
-      );
+      if (verificationData.status === "Completed") {
+        const updateData: UpdatePaymentDTO = {
+          status: "completed",
+          transactionId: verificationData.transaction_id,
+          metadata: verificationData,
+        };
 
-      // !!! IMPORTANT: Update the order's payment status !!!
-      await this.orderRepository.updatePaymentStatus(
-        orderId,
-        "completed", // Change from "pending" to "completed"
-      );
+        const updatedPayment = await this.paymentRepository.updatePayment(
+          payment._id!.toString(),
+          updateData,
+        );
 
-      return {
-        success: true,
-        message: "Payment verified successfully",
-        payment: this.sanitizePayment(updatedPayment),
-      };
-    } else {
-      const updateData: UpdatePaymentDTO = {
-        status: "failed",
-        metadata: verificationData,
-      };
+        await this.orderRepository.updatePaymentStatus(orderId, "completed");
 
-      await this.paymentRepository.updatePayment(
-        payment._id!.toString(),
-        updateData,
-      );
+        const order = await this.orderRepository.findById(orderId);
 
-      // Optionally update order payment status to failed
-      await this.orderRepository.updatePaymentStatus(orderId, "failed");
+        if (order && order.items && order.items.length > 0) {
+          const businessAmounts = new Map<string, number>();
 
-      throw new HttpError(400, `Payment status: ${verificationData.status}`);
+          for (const item of order.items) {
+            const businessId = item.business.toString();
+            const itemTotal = item.price * item.quantity;
+            const discountAmount = itemTotal * ((item.discount || 0) / 100);
+            const finalAmount = itemTotal - discountAmount;
+
+            businessAmounts.set(
+              businessId,
+              (businessAmounts.get(businessId) || 0) + finalAmount,
+            );
+          }
+
+          for (const [businessId, amount] of businessAmounts.entries()) {
+            await this.walletService.creditUser(
+              businessId,
+              amount,
+              orderId,
+              `Earnings from order ${orderId}`,
+              session,
+            );
+          }
+        }
+
+        await session.commitTransaction();
+        session.endSession();
+
+        return {
+          success: true,
+          message: "Payment verified and businesses credited successfully",
+          payment: this.sanitizePayment(updatedPayment),
+        };
+      } else {
+        const updateData: UpdatePaymentDTO = {
+          status: "failed",
+          metadata: verificationData,
+        };
+
+        await this.paymentRepository.updatePayment(
+          payment._id!.toString(),
+          updateData,
+        );
+
+        await this.orderRepository.updatePaymentStatus(orderId, "failed");
+
+        await session.commitTransaction();
+        session.endSession();
+
+        throw new HttpError(400, `Payment status: ${verificationData.status}`);
+      }
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
     }
   };
 
