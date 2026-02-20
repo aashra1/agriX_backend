@@ -111,16 +111,6 @@ export class PaymentService {
         throw new HttpError(400, "Order ID mismatch");
       }
 
-      if (payment.status === "completed") {
-        await session.abortTransaction();
-        session.endSession();
-        return {
-          success: true,
-          message: "Payment already verified",
-          payment: this.sanitizePayment(payment),
-        };
-      }
-
       const verificationData = await verifyKhaltiPayment(pidx);
 
       if (verificationData.status === "Completed") {
@@ -143,8 +133,36 @@ export class PaymentService {
           const businessAmounts = new Map<string, number>();
 
           for (const item of order.items) {
-            const businessId = item.business.toString();
-            const itemTotal = item.price * item.quantity;
+            let businessId = "";
+
+            const businessField = item as any;
+
+            if (businessField.businessData && businessField.businessData._id) {
+              businessId = businessField.businessData._id.toString();
+            } else if (
+              businessField.business &&
+              typeof businessField.business === "object" &&
+              businessField.business._id
+            ) {
+              businessId = businessField.business._id.toString();
+            } else if (
+              businessField.business &&
+              typeof businessField.business === "string"
+            ) {
+              businessId = businessField.business;
+            } else if (
+              businessField.business &&
+              businessField.business.toString
+            ) {
+              businessId = businessField.business.toString();
+            }
+
+            if (!businessId) {
+              console.error("Could not extract business ID from item:", item);
+              continue;
+            }
+
+            const itemTotal = (item.price || 0) * (item.quantity || 0);
             const discountAmount = itemTotal * ((item.discount || 0) / 100);
             const finalAmount = itemTotal - discountAmount;
 
@@ -156,10 +174,18 @@ export class PaymentService {
 
           for (const [businessId, amount] of businessAmounts.entries()) {
             await this.walletService.creditUser(
-              businessId,
-              amount,
-              orderId,
-              `Earnings from order ${orderId}`,
+              {
+                ownerId: businessId,
+                ownerType: "Business",
+                amount: amount,
+                reference: orderId,
+                description: `Earnings from order ${orderId}`,
+                metadata: {
+                  orderId,
+                  paymentId: payment._id,
+                  orderTotal: order.total,
+                },
+              },
               session,
             );
           }
