@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const KHALTI_CONFIG = {
-  baseUrl: "https://dev.khalti.com/api/v2",
+  baseUrl: "https://a.khalti.com/api/v2",
 };
 
 export const getKhaltiConfig = () => {
