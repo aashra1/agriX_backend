@@ -38,21 +38,10 @@ export const authGuard = (req: Request, res: Response, next: NextFunction) => {
     return res.status(401).json({ success: false, message: "Token missing!" });
 
   try {
-    console.log("🔐 Verifying token:", token.substring(0, 30) + "...");
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET as string,
     ) as JwtPayload;
-
-    console.log(
-      "📦 Decoded token payload FULL:",
-      JSON.stringify(decoded, null, 2),
-    );
-    console.log("📦 Decoded token keys:", Object.keys(decoded));
-    console.log("📦 Decoded token id:", decoded.id);
-    console.log("📦 Decoded token _id:", (decoded as any)._id);
-    console.log("📦 Decoded token businessId:", decoded.businessId);
-    console.log("📦 Decoded token role:", decoded.role);
 
     req.user = {
       id: decoded.id,
@@ -61,11 +50,8 @@ export const authGuard = (req: Request, res: Response, next: NextFunction) => {
       isAdmin: decoded.isAdmin,
       ...(decoded.businessId && { businessId: decoded.businessId }),
     };
-
-    console.log("👤 Set req.user:", req.user);
     next();
   } catch (error) {
-    console.error("❌ Invalid token!", error);
     return res.status(401).json({ success: false, message: "Invalid token!" });
   }
 };
@@ -109,7 +95,6 @@ export const authGuardAdmin = (
     }
     next();
   } catch (error) {
-    console.error("Invalid token!", error);
     return res.status(401).json({ success: false, message: "Invalid token!" });
   }
 };

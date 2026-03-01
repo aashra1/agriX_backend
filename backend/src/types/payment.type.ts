@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-// Export these for use in DTOs
 export const PaymentStatusValues = [
   "pending",
   "completed",

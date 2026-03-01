@@ -30,16 +30,7 @@ router.put(
 
 router.get("/admin/all", authGuardAdmin, businessController.getAll);
 
-router.get(
-  "/profile",
-  authGuard,
-  (req, res, next) => {
-    console.log("✅ GET /api/business/profile route hit!");
-    console.log("User from authGuard:", req.user);
-    next();
-  },
-  businessController.getProfile,
-);
+router.get("/profile", authGuard, businessController.getProfile);
 
 router.put("/profile/edit", authGuard, businessController.editProfile);
 
