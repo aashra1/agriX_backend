@@ -24,6 +24,10 @@ describe("Product Deletion Tests", () => {
     prodId = product._id.toString();
   });
 
+  afterAll(async () => {
+    await Product.deleteMany({});
+  });
+
   test("Owner should delete product successfully", async () => {
     const res = await request(app)
       .delete(`/api/product/${prodId}`)
