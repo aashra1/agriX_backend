@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import {
   PaymentRepository,
   IPaymentRepository,
@@ -8,22 +9,24 @@ import {
   IUserRepository,
 } from "../repositories/user.repository";
 import { WalletService } from "../services/wallet.service";
+import { TaxRepository } from "../repositories/tax.repository";
 import { CreatePaymentDTO, UpdatePaymentDTO } from "../dtos/payment.dto";
 import { initiateKhaltiPayment, verifyKhaltiPayment } from "../config/khalti";
 import { HttpError } from "../error/http-error";
-import mongoose from "mongoose";
 
 export class PaymentService {
   private paymentRepository: IPaymentRepository;
   private userRepository: IUserRepository;
   private orderRepository: OrderRepository;
   private walletService: WalletService;
+  private taxRepository: TaxRepository;
 
   constructor() {
     this.paymentRepository = new PaymentRepository();
     this.userRepository = new UserRepository();
     this.orderRepository = new OrderRepository();
     this.walletService = new WalletService();
+    this.taxRepository = new TaxRepository();
   }
 
   private sanitizePayment(payment: any) {
@@ -97,21 +100,46 @@ export class PaymentService {
     };
   };
 
+  // services/payment.service.ts
   verifyKhaltiPayment = async (pidx: string, orderId: string) => {
+    console.log("========== VERIFY KHALTI PAYMENT ==========");
+    console.log(`PIDX: ${pidx}, OrderId: ${orderId}`);
+
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
       const payment = await this.paymentRepository.getPaymentByPidx(pidx);
       if (!payment) {
+        console.error("❌ Payment record not found for pidx:", pidx);
         throw new HttpError(404, "Payment record not found");
       }
+      console.log("✅ Payment found:", payment._id);
 
       if (payment.orderId !== orderId) {
+        console.error(
+          `❌ Order ID mismatch: payment has ${payment.orderId}, request has ${orderId}`,
+        );
         throw new HttpError(400, "Order ID mismatch");
       }
 
+      if (payment.status === "completed") {
+        console.log("⚠️ Payment already completed");
+        await session.abortTransaction();
+        session.endSession();
+        return {
+          success: true,
+          message: "Payment already verified",
+          payment: this.sanitizePayment(payment),
+        };
+      }
+
+      console.log("Verifying with Khalti API...");
       const verificationData = await verifyKhaltiPayment(pidx);
+      console.log(
+        "Khalti verification response:",
+        JSON.stringify(verificationData, null, 2),
+      );
 
       if (verificationData.status === "Completed") {
         const updateData: UpdatePaymentDTO = {
@@ -124,75 +152,140 @@ export class PaymentService {
           payment._id!.toString(),
           updateData,
         );
+        console.log("✅ Payment status updated to completed");
 
         await this.orderRepository.updatePaymentStatus(orderId, "completed");
+        console.log("✅ Order payment status updated");
 
         const order = await this.orderRepository.findById(orderId);
 
+        if (!order) {
+          console.error("❌ Order not found:", orderId);
+          throw new HttpError(404, "Order not found");
+        }
+        console.log("✅ Order found:", order._id);
+        console.log("Order items count:", order.items?.length);
+
         if (order && order.items && order.items.length > 0) {
           const businessAmounts = new Map<string, number>();
+          const businessTaxes = new Map<string, number>();
 
           for (const item of order.items) {
+            console.log("Processing item:", JSON.stringify(item, null, 2));
+
             let businessId = "";
 
-            const businessField = item as any;
-
-            if (businessField.businessData && businessField.businessData._id) {
-              businessId = businessField.businessData._id.toString();
-            } else if (
-              businessField.business &&
-              typeof businessField.business === "object" &&
-              businessField.business._id
-            ) {
-              businessId = businessField.business._id.toString();
-            } else if (
-              businessField.business &&
-              typeof businessField.business === "string"
-            ) {
-              businessId = businessField.business;
-            } else if (
-              businessField.business &&
-              businessField.business.toString
-            ) {
-              businessId = businessField.business.toString();
+            if (item.business) {
+              if (typeof item.business === "object" && item.business._id) {
+                businessId = item.business._id.toString();
+                console.log("Business ID from object:", businessId);
+              } else if (typeof item.business === "string") {
+                businessId = item.business;
+                console.log("Business ID from string:", businessId);
+              }
             }
 
             if (!businessId) {
-              console.error("Could not extract business ID from item:", item);
+              console.error("❌ Could not extract business ID from item");
               continue;
             }
 
             const itemTotal = (item.price || 0) * (item.quantity || 0);
             const discountAmount = itemTotal * ((item.discount || 0) / 100);
-            const finalAmount = itemTotal - discountAmount;
+            const finalAmount = Number((itemTotal - discountAmount).toFixed(2));
+            const taxAmount = Number((finalAmount * 0.13).toFixed(2));
+
+            console.log(
+              `Item calculation - Total: ${itemTotal}, Discount: ${discountAmount}, Final: ${finalAmount}, Tax: ${taxAmount}`,
+            );
 
             businessAmounts.set(
               businessId,
-              (businessAmounts.get(businessId) || 0) + finalAmount,
+              Number(
+                ((businessAmounts.get(businessId) || 0) + finalAmount).toFixed(
+                  2,
+                ),
+              ),
+            );
+
+            businessTaxes.set(
+              businessId,
+              Number(
+                ((businessTaxes.get(businessId) || 0) + taxAmount).toFixed(2),
+              ),
             );
           }
 
+          console.log("Business amounts:", Object.fromEntries(businessAmounts));
+          console.log("Business taxes:", Object.fromEntries(businessTaxes));
+
           for (const [businessId, amount] of businessAmounts.entries()) {
-            await this.walletService.creditUser(
-              {
-                ownerId: businessId,
-                ownerType: "Business",
-                amount: amount,
-                reference: orderId,
-                description: `Earnings from order ${orderId}`,
-                metadata: {
-                  orderId,
-                  paymentId: payment._id,
-                  orderTotal: order.total,
-                },
-              },
-              session,
+            console.log(
+              `Processing credit for business ${businessId}, amount: ${amount}`,
             );
+
+            const transactionExists =
+              await this.walletService.checkTransactionExists(
+                businessId,
+                orderId,
+                session,
+              );
+
+            console.log(`Transaction exists check: ${transactionExists}`);
+
+            if (!transactionExists) {
+              console.log(`Crediting business ${businessId} with ${amount}`);
+
+              const creditResult = await this.walletService.creditUser(
+                {
+                  ownerId: businessId,
+                  ownerType: "Business",
+                  amount: amount,
+                  reference: orderId,
+                  description: `Earnings from order ${orderId}`,
+                  metadata: {
+                    orderId,
+                    paymentId: payment._id,
+                    orderTotal: order.total,
+                  },
+                },
+                session,
+              );
+
+              console.log(`Credit result:`, creditResult);
+
+              const taxAmount = businessTaxes.get(businessId) || 0;
+              if (taxAmount > 0) {
+                console.log(
+                  `Creating tax liability for business ${businessId}, amount: ${taxAmount}`,
+                );
+                const period = new Date().toISOString().slice(0, 7);
+
+                await this.taxRepository.createWithSession(
+                  {
+                    businessId: new mongoose.Types.ObjectId(businessId),
+                    orderId: new mongoose.Types.ObjectId(orderId),
+                    amount: taxAmount,
+                    period: period,
+                    status: "accrued",
+                  },
+                  session,
+                );
+                console.log(`✅ Tax liability created`);
+              }
+            } else {
+              console.log(
+                `Transaction already exists for business ${businessId}, skipping`,
+              );
+            }
           }
         }
 
+        console.log("Committing transaction...");
         await session.commitTransaction();
         session.endSession();
+        console.log("✅ Transaction committed successfully");
+        console.log("========== VERIFICATION COMPLETE ==========");
 
         return {
           success: true,
@@ -200,6 +293,10 @@ export class PaymentService {
           payment: this.sanitizePayment(updatedPayment),
         };
       } else {
+        console.error(
+          `❌ Khalti verification failed with status: ${verificationData.status}`,
+        );
+
         const updateData: UpdatePaymentDTO = {
           status: "failed",
           metadata: verificationData,
@@ -218,12 +315,12 @@ export class PaymentService {
         throw new HttpError(400, `Payment status: ${verificationData.status}`);
       }
     } catch (error) {
+      console.error("❌ Error in verifyKhaltiPayment:", error);
       await session.abortTransaction();
       session.endSession();
       throw error;
     }
   };
-
   getPaymentByOrderId = async (orderId: string) => {
     const payment = await this.paymentRepository.getPaymentByOrderId(orderId);
     if (!payment) {
