@@ -1,4 +1,3 @@
-// services/business.service.ts
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
