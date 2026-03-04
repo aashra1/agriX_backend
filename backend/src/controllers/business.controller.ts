@@ -5,8 +5,7 @@ import {
   LoginBusinessDto,
   ApproveBusinessDto,
 } from "../dtos/business.dto";
-import { EditUserDTO } from "../dtos/user.dto";
-import jwt from "jsonwebtoken"; // Add this import
+import jwt from "jsonwebtoken";
 
 export class BusinessController {
   private businessService = new BusinessService();
@@ -39,35 +38,20 @@ export class BusinessController {
       }
 
       const result = await this.businessService.login(validation.data);
-
-      console.log("🔍 Business service returned:", result);
-      console.log("🔍 Business object:", result.business);
-      console.log("🔍 Business id:", result.business.id);
-      console.log("🔍 Business _id:", result.business._id);
-
-      // Use _id if id doesn't exist
       const businessId = result.business.id || result.business._id;
 
       if (!businessId) {
-        console.error("❌ No business ID found in:", result.business);
         return res.status(500).json({
           success: false,
-          message: "Business ID not found in token creation",
+          message: "Business ID not found",
         });
       }
 
-      // Generate JWT token with business ID
-      const tokenPayload = {
-        id: businessId,
-        role: "Business",
-        businessId: businessId,
-      };
-
-      console.log("📝 Token payload being signed:", tokenPayload);
-
-      const token = jwt.sign(tokenPayload, process.env.JWT_SECRET as string, {
-        expiresIn: "7d",
-      });
+      const token = jwt.sign(
+        { id: businessId, role: "Business", businessId },
+        process.env.JWT_SECRET as string,
+        { expiresIn: "7d" },
+      );
 
       return res.status(200).json({
         success: true,
@@ -75,7 +59,6 @@ export class BusinessController {
         business: result.business,
       });
     } catch (error: any) {
-      console.error("❌ Login error:", error);
       return res.status(400).json({ success: false, message: error.message });
     }
   };
@@ -86,7 +69,7 @@ export class BusinessController {
       if (!businessId) {
         return res
           .status(401)
-          .json({ success: false, message: "Unauthorized: No user ID found" });
+          .json({ success: false, message: "Unauthorized" });
       }
       if (!req.file) {
         return res
@@ -152,33 +135,29 @@ export class BusinessController {
   };
 
   getProfile = async (req: any, res: Response) => {
-    console.log("📥 getProfile controller called");
-    console.log("req.user:", req.user);
-    console.log("req.user.id:", req.user?.id);
-
     try {
-      const businessId = req.user.id;
-      console.log("Looking up business with ID:", businessId);
-
-      const profile = await this.businessService.getBusinessProfile(businessId);
-      console.log("✅ Profile found:", profile);
-
+      const profile = await this.businessService.getBusinessProfile(
+        req.user.id,
+      );
       res.status(200).json(profile);
     } catch (error: any) {
-      console.error("❌ Error in getProfile:", error.message);
       res.status(404).json({ message: error.message });
     }
   };
 
   editProfile = async (req: any, res: Response) => {
     try {
-      const businessId = req.user.id;
+      console.log("Edit profile request body:", req.body);
+      console.log("Edit profile file:", req.file);
+
       const result = await this.businessService.editBusinessProfile(
-        businessId,
+        req.user.id,
         req.body,
+        req.file,
       );
       res.status(200).json(result);
     } catch (error: any) {
+      console.error("Edit profile error:", error);
       res.status(400).json({ message: error.message });
     }
   };
