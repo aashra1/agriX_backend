@@ -1,55 +1,57 @@
 import request from "supertest";
 import app from "../../../app";
-import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
 import { Business } from "../../../model/business.model";
+import jwt from "jsonwebtoken";
 
 describe("Business Document Upload Tests", () => {
-  let tempToken!: string;
-  let bizId!: string;
+  let tempToken: string;
+  let businessId: string;
 
   beforeAll(async () => {
-    const biz = await Business.create({
-      businessName: "Doc Test Biz",
-      email: "docs@test.com",
-      password: "hashedpassword",
-      phoneNumber: "9811111111",
-      address: "Patan",
-      category: "Service",
+    const business = await Business.create({
+      businessName: "Document Upload Biz",
+      email: "document@test.com",
+      password: "hashedPassword123",
+      phoneNumber: "9841234567",
+      address: "Lalitpur",
+      businessStatus: "Pending",
+      role: "Business",
     });
 
-    bizId = (biz._id as any).toString();
+    businessId = business._id.toString();
 
     tempToken = jwt.sign(
-      { id: bizId, role: "Business", temp: true },
+      { id: businessId, role: "Business", temp: true },
       process.env.JWT_SECRET!,
       { expiresIn: "1h" },
     );
   });
 
   afterAll(async () => {
-    if (bizId) {
-      await Business.deleteOne({ _id: bizId });
-    }
+    await Business.deleteMany({ email: "document@test.com" });
   });
 
   test("Should upload business verification document successfully", async () => {
-    const res = await request(app)
+    const response = await request(app)
       .post("/api/business/upload-document")
       .set("Authorization", `Bearer ${tempToken}`)
-      .attach("document", Buffer.from("fake-pdf-content"), "license.pdf");
+      .attach("document", Buffer.from("dummy pdf content"), {
+        filename: "test.pdf",
+        contentType: "application/pdf",
+      });
 
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.message).toBe("Document uploaded");
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.message).toBe("Document uploaded");
   });
 
   test("Should fail upload if no file is provided", async () => {
-    const res = await request(app)
+    const response = await request(app)
       .post("/api/business/upload-document")
       .set("Authorization", `Bearer ${tempToken}`);
 
-    expect(res.status).toBe(400);
-    expect(res.body.message).toBe("No document uploaded");
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe("No document uploaded");
   });
 });
