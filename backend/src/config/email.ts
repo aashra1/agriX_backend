@@ -16,7 +16,7 @@ export const transporter = nodemailer.createTransport({
 
 export const sendEmail = async (to: string, subject: string, html: string) => {
   const mailOptions = {
-    from: `ArtSphere <${EMAIL_USER}>`,
+    from: `Agrix <${EMAIL_USER}>`,
     to,
     subject,
     html,
