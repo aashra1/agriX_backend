@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { BusinessController } from "../controllers/business.controller";
 import { authGuard, authGuardAdmin } from "../middleware/authGuard";
-import uploadBusinessDoc from "../multer/business.profile.multer";
 import uploadProfilePicture from "../multer/business.profile.multer";
+import uploadBusinessDocument from "../multer/business.multer";
 
 const router = Router();
 const businessController = new BusinessController();
@@ -18,7 +18,7 @@ router.post("/login", businessController.login);
 router.post(
   "/upload-document",
   authGuard,
-  uploadBusinessDoc.single("document"),
+  uploadBusinessDocument.single("document"),
   businessController.uploadDocument,
 );
 
@@ -32,6 +32,11 @@ router.get("/admin/all", authGuardAdmin, businessController.getAll);
 
 router.get("/profile", authGuard, businessController.getProfile);
 
-router.put("/profile/edit", authGuard, businessController.editProfile);
+router.put(
+  "/profile/edit",
+  authGuard,
+  uploadProfilePicture.single("profilePicture"),
+  businessController.editProfile,
+);
 
 export default router;
