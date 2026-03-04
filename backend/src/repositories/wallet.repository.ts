@@ -1,84 +1,114 @@
-import {
-  WalletModel,
-  TransactionModel,
-  IWallet,
-  ITransaction,
-} from "../model/wallet.model";
-import { CreateWalletDTO, CreateTransactionDTO } from "../dtos/wallet.dto";
+import mongoose from "mongoose";
+import { WalletModel, IWallet } from "../model/wallet.model";
 
-export interface IWalletRepository {
-  getWalletByOwner(ownerId: string, ownerType: string): Promise<IWallet | null>;
-  createWallet(data: CreateWalletDTO): Promise<IWallet>;
-  updateBalance(
+export class WalletRepository {
+  async findByOwner(
     ownerId: string,
-    ownerType: string,
-    amount: number,
-    session?: any,
-  ): Promise<IWallet | null>;
-  createTransaction(data: CreateTransactionDTO): Promise<ITransaction>;
-  getTransactions(
-    ownerId: string,
-    ownerType: string,
-    skip: number,
-    limit: number,
-  ): Promise<{ transactions: ITransaction[]; total: number }>;
-}
-
-export class WalletRepository implements IWalletRepository {
-  async getWalletByOwner(
-    ownerId: string,
-    ownerType: string,
+    ownerType: "User" | "Business",
+    session?: mongoose.ClientSession,
   ): Promise<IWallet | null> {
-    return await WalletModel.findOne({ ownerId, ownerType }).exec();
+    try {
+      const query = WalletModel.findOne({ ownerId, ownerType });
+      if (session) {
+        return await query.session(session).exec();
+      }
+      return await query.exec();
+    } catch (error) {
+      console.error("Error in findByOwner:", error);
+      throw error;
+    }
   }
 
-  async createWallet(data: CreateWalletDTO): Promise<IWallet> {
-    const wallet = new WalletModel({
-      ownerId: data.ownerId,
-      ownerType: data.ownerType,
-      balance: 0,
-      currency: data.currency,
-    });
-    return await wallet.save();
+  async create(
+    data: Partial<IWallet>,
+    session?: mongoose.ClientSession,
+  ): Promise<IWallet> {
+    try {
+      const wallet = new WalletModel(data);
+      if (session) {
+        return await wallet.save({ session });
+      }
+      return await wallet.save();
+    } catch (error) {
+      console.error("Error in create:", error);
+      throw error;
+    }
+  }
+
+  async incrementBalance(
+    walletId: string,
+    amount: number,
+    session?: mongoose.ClientSession,
+  ): Promise<IWallet | null> {
+    try {
+      const update = { $inc: { balance: amount } };
+      const options = { new: true, session, runValidators: true };
+
+      const updated = await WalletModel.findByIdAndUpdate(
+        walletId,
+        update,
+        options,
+      ).exec();
+
+      if (!updated) {
+        console.log(`Wallet with ID ${walletId} not found for increment`);
+      }
+
+      return updated;
+    } catch (error) {
+      console.error("Error in incrementBalance:", error);
+      throw error;
+    }
+  }
+
+  async decrementBalance(
+    walletId: string,
+    amount: number,
+    session?: mongoose.ClientSession,
+  ): Promise<IWallet | null> {
+    try {
+      const update = { $inc: { balance: -amount } };
+      const options = { new: true, session, runValidators: true };
+
+      const updated = await WalletModel.findByIdAndUpdate(
+        walletId,
+        update,
+        options,
+      ).exec();
+
+      if (!updated) {
+        console.log(`Wallet with ID ${walletId} not found for decrement`);
+      }
+
+      return updated;
+    } catch (error) {
+      console.error("Error in decrementBalance:", error);
+      throw error;
+    }
   }
 
   async updateBalance(
-    ownerId: string,
-    ownerType: string,
-    amount: number,
-    session?: any,
+    walletId: string,
+    balance: number,
+    session?: mongoose.ClientSession,
   ): Promise<IWallet | null> {
-    return await WalletModel.findOneAndUpdate(
-      { ownerId, ownerType },
-      { $inc: { balance: amount } },
-      { new: true, session },
-    ).exec();
-  }
+    try {
+      const options = { new: true, session, runValidators: true };
 
-  async createTransaction(data: CreateTransactionDTO): Promise<ITransaction> {
-    const transaction = new TransactionModel(data);
-    return await transaction.save();
-  }
+      const updated = await WalletModel.findByIdAndUpdate(
+        walletId,
+        { balance },
+        options,
+      ).exec();
 
-  async getTransactions(
-    ownerId: string,
-    ownerType: string,
-    skip: number = 0,
-    limit: number = 10,
-  ): Promise<{ transactions: ITransaction[]; total: number }> {
-    const wallet = await this.getWalletByOwner(ownerId, ownerType);
-    if (!wallet) {
-      return { transactions: [], total: 0 };
+      if (!updated) {
+        console.log(`Wallet with ID ${walletId} not found for update`);
+      }
+
+      return updated;
+    } catch (error) {
+      console.error("Error in updateBalance:", error);
+      throw error;
     }
-
-    const transactions = await TransactionModel.find({ wallet: wallet._id })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .exec();
-
-    const total = await TransactionModel.countDocuments({ wallet: wallet._id });
-
-    return { transactions, total };
   }
 }
