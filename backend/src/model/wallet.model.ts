@@ -2,8 +2,8 @@
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface IWallet extends Document {
-  ownerId: mongoose.Types.ObjectId; 
-  ownerType: "User" | "Business"; 
+  ownerId: mongoose.Types.ObjectId;
+  ownerType: "User" | "Business";
   balance: number;
   currency: string;
   createdAt: Date;
@@ -27,7 +27,7 @@ const WalletSchema = new Schema(
     ownerId: {
       type: Schema.Types.ObjectId,
       required: true,
-      refPath: "ownerType", // Dynamic ref
+      refPath: "ownerType",
     },
     ownerType: {
       type: String,
@@ -40,7 +40,6 @@ const WalletSchema = new Schema(
   { timestamps: true },
 );
 
-
 WalletSchema.index({ ownerId: 1, ownerType: 1 }, { unique: true });
 
 const TransactionSchema = new Schema(
@@ -52,6 +51,8 @@ const TransactionSchema = new Schema(
     reference: { type: String, required: true },
     description: { type: String, required: true },
     metadata: { type: Schema.Types.Mixed },
+    ownerId: { type: String, required: true },
+    ownerType: { type: String, enum: ["User", "Business"], required: true },
   },
   { timestamps: true },
 );
