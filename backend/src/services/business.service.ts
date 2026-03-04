@@ -1,3 +1,4 @@
+// services/business.service.ts
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
@@ -77,26 +78,8 @@ export class BusinessService {
     if (business.businessStatus === "Rejected")
       throw new Error("Business registration rejected by admin");
 
-    const token = jwt.sign(
-      {
-        id: business._id,
-        role: business.role,
-        businessId: business._id,
-      },
-      process.env.JWT_SECRET as string,
-      { expiresIn: "1h" },
-    );
-
-    console.log("🎯 Raw business from DB:", {
-      _id: business._id,
-      id: (business as any).id,
-      role: business.role,
-      businessName: business.businessName,
-    });
-
     return {
       business: this.sanitizeBusiness(business),
-      token,
       message: "Business logged in successfully",
     };
   };
@@ -149,23 +132,53 @@ export class BusinessService {
   getBusinessProfile = async (businessId: string) => {
     const business = await businessRepository.getBusinessById(businessId);
     if (!business) throw new Error("Business not found");
-
     return this.sanitizeBusiness(business);
   };
 
   editBusinessProfile = async (
     businessId: string,
     updateData: Partial<RegisterBusinessDto>,
+    file?: Express.Multer.File,
   ) => {
+    console.log("editBusinessProfile called with:", {
+      businessId,
+      updateData,
+      file: file ? "File present" : "No file",
+    });
+
+    if (!updateData) {
+      throw new Error("No update data provided");
+    }
+
     const { password, email, ...allowedUpdates } = updateData;
+
+    if (file) {
+      allowedUpdates.profilePicture = file.path;
+    }
+
+    Object.keys(allowedUpdates).forEach((key) => {
+      if (
+        allowedUpdates[key as keyof typeof allowedUpdates] === undefined ||
+        allowedUpdates[key as keyof typeof allowedUpdates] === ""
+      ) {
+        delete allowedUpdates[key as keyof typeof allowedUpdates];
+      }
+    });
+
+    if (Object.keys(allowedUpdates).length === 0) {
+      throw new Error("No valid fields to update");
+    }
+
+    console.log("Updating with data:", allowedUpdates);
 
     const updatedBusiness = await businessRepository.updateBusiness(
       businessId,
       allowedUpdates,
     );
 
-    if (!updatedBusiness)
+    if (!updatedBusiness) {
       throw new Error("Business not found or update failed");
+    }
 
     return {
       message: "Profile updated successfully",
