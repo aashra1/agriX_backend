@@ -39,7 +39,7 @@ describe("Product Creation Tests", () => {
     const res = await request(app)
       .post("/api/product")
       .set("Authorization", `Bearer ${bizToken}`)
-      .send({ name: "Incomplete Product" }); 
+      .send({ name: "Incomplete Product" });
     expect(res.status).toBe(400);
   });
 });
