@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>20/20</span>
+                <span class='fraction'>0/20</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>0/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>20/20</span>
+                <span class='fraction'>0/20</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line low'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -83,46 +83,46 @@
 <a name='L18'></a><a href='#L18'>18</a>
 <a name='L19'></a><a href='#L19'>19</a>
 <a name='L20'></a><a href='#L20'>20</a>
-<a name='L21'></a><a href='#L21'>21</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { z } from "zod";
-&nbsp;
-export const ProductSchema = z.object({
-  _id: z.string().optional(),
-  business: z.string().min(1, "Business ID is required"),
-  name: z.string().min(1, "Product name is required"),
-  category: z.string().min(1, "Category is required"),
-  brand: z.string().optional(),
-  price: z.number().positive("Price must be greater than 0"),
-  discount: z.number().min(0).max(100).optional(),
-  stock: z.number().int().nonnegative("Stock cannot be negative"),
-  weight: z.number().optional(),
-  unitType: z.string().optional().default("kg"),
-  shortDescription: z.string().max(150).optional(),
-  fullDescription: z.string().optional(),
-  image: z.string().optional(),
-  createdAt: z.date().optional(),
-});
-&nbsp;
-export type IProduct = z.infer&lt;typeof ProductSchema&gt;;
+<a name='L21'></a><a href='#L21'>21</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >import { z } from "zod";</span></span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >export const ProductSchema = z.object({</span>
+<span class="cstat-no" title="statement not covered" >  _id: z.string().optional(),</span>
+<span class="cstat-no" title="statement not covered" >  business: z.string().min(1, "Business ID is required"),</span>
+<span class="cstat-no" title="statement not covered" >  name: z.string().min(1, "Product name is required"),</span>
+<span class="cstat-no" title="statement not covered" >  category: z.string().min(1, "Category is required"),</span>
+<span class="cstat-no" title="statement not covered" >  brand: z.string().optional(),</span>
+<span class="cstat-no" title="statement not covered" >  price: z.number().positive("Price must be greater than 0"),</span>
+<span class="cstat-no" title="statement not covered" >  discount: z.number().min(0).max(100).optional(),</span>
+<span class="cstat-no" title="statement not covered" >  stock: z.number().int().nonnegative("Stock cannot be negative"),</span>
+<span class="cstat-no" title="statement not covered" >  weight: z.number().optional(),</span>
+<span class="cstat-no" title="statement not covered" >  unitType: z.string().optional().default("kg"),</span>
+<span class="cstat-no" title="statement not covered" >  shortDescription: z.string().max(150).optional(),</span>
+<span class="cstat-no" title="statement not covered" >  fullDescription: z.string().optional(),</span>
+<span class="cstat-no" title="statement not covered" >  image: z.string().optional(),</span>
+<span class="cstat-no" title="statement not covered" >  createdAt: z.date().optional(),</span>
+<span class="cstat-no" title="statement not covered" >});</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >export type IProduct = z.infer&lt;typeof ProductSchema&gt;;</span>
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -130,7 +130,7 @@ export type IProduct = z.infer&lt;typeof ProductSchema&gt;;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-04T14:37:08.323Z
+                at 2026-03-05T16:16:03.915Z
             </div>
         <script src="../prettify.js"></script>
         <script>
