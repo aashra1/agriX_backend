@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">55.26% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>38/38</span>
+                <span class='fraction'>21/38</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>7/7</span>
+                <span class='fraction'>0/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>3/3</span>
+                <span class='fraction'>0/3</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">55.26% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>38/38</span>
+                <span class='fraction'>21/38</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -107,33 +107,33 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -144,34 +144,34 @@ import path from "path";
 import fs from "fs";
 &nbsp;
 const uploadDir = path.join(__dirname, "../uploads/product-images");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+if (!fs.existsSync(uploadDir)) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >  fs.mkdirSync(uploadDir, { recursive: true });</span>
+<span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
 const storage = multer.diskStorage({
-  destination: (req, file, cb) =&gt; {
-    cb(null, uploadDir);
+  destination: <span class="fstat-no" title="function not covered" >(req, file, cb) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    cb(null, uploadDir);</span>
   },
-  filename: (req, file, cb) =&gt; {
-    cb(null, `${Date.now()}-${file.originalname}`);
+  filename: <span class="fstat-no" title="function not covered" >(req, file, cb) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    cb(null, `${Date.now()}-${file.originalname}`);</span>
   },
 });
 &nbsp;
 // File filter to allow only certain types
-const fileFilter = (
-  req: Express.Request,
-  file: Express.Multer.File,
-  cb: multer.FileFilterCallback,
-) =&gt; {
-  const allowedTypes = /jpeg|jpg|png|pdf|doc|docx/;
-  const extname = allowedTypes.test(
-    path.extname(file.originalname).toLowerCase(),
-  );
-  const mimetype = allowedTypes.test(file.mimetype);
-&nbsp;
-  if (extname &amp;&amp; mimetype) cb(null, true);
-  else cb(new Error("File type not allowed"));
-};
+const fileFilter = <span class="fstat-no" title="function not covered" >(</span>
+<span class="cstat-no" title="statement not covered" >  req: Express.Request,</span>
+<span class="cstat-no" title="statement not covered" >  file: Express.Multer.File,</span>
+<span class="cstat-no" title="statement not covered" >  cb: multer.FileFilterCallback,</span>
+<span class="cstat-no" title="statement not covered" >) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  const allowedTypes = /jpeg|jpg|png|pdf|doc|docx/;</span>
+<span class="cstat-no" title="statement not covered" >  const extname = allowedTypes.test(</span>
+<span class="cstat-no" title="statement not covered" >    path.extname(file.originalname).toLowerCase(),</span>
+<span class="cstat-no" title="statement not covered" >  );</span>
+<span class="cstat-no" title="statement not covered" >  const mimetype = allowedTypes.test(file.mimetype);</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >  if (extname &amp;&amp; mimetype) cb(null, true);</span>
+<span class="cstat-no" title="statement not covered" >  else cb(new Error("File type not allowed"));</span>
+<span class="cstat-no" title="statement not covered" >};</span>
 &nbsp;
 // Multer instance
 const uploadProductImage = multer({ storage, fileFilter });
@@ -184,7 +184,7 @@ export default uploadProductImage;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-04T14:37:08.323Z
+                at 2026-03-05T16:16:03.915Z
             </div>
         <script src="../prettify.js"></script>
         <script>
