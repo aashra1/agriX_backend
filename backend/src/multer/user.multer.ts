@@ -22,14 +22,29 @@ const fileFilter = (
   file: Express.Multer.File,
   cb: multer.FileFilterCallback,
 ) => {
-  const allowedTypes = /jpeg|jpg|png|pdf|doc|docx/;
-  const extname = allowedTypes.test(
+  // Check file extension
+  const allowedExtensions = /\.(jpeg|jpg|png|pdf|doc|docx)$/i;
+  const extname = allowedExtensions.test(
     path.extname(file.originalname).toLowerCase(),
   );
-  const mimetype = allowedTypes.test(file.mimetype);
 
-  if (extname && mimetype) cb(null, true);
-  else cb(new Error("File type not allowed"));
+  // Check mimetype separately since the pattern matching is different
+  const allowedMimeTypes = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ];
+
+  const mimetype = allowedMimeTypes.includes(file.mimetype);
+
+  if (extname && mimetype) {
+    cb(null, true);
+  } else {
+    cb(new Error("File type not allowed") as any);
+  }
 };
 
 // Multer instance
