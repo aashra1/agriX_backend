@@ -36,8 +36,6 @@ describe("Business Login Integration", () => {
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("token");
     expect(res.body).toHaveProperty("business");
-    // Your API doesn't return a message field on success
-    // So remove this assertion
   });
 
   test("POST /api/business/login - Should fail with incorrect password", async () => {
@@ -46,7 +44,6 @@ describe("Business Login Integration", () => {
       password: "WrongPassword123",
     });
 
-    // Your API returns 400 for wrong password, not 401
     expect(res.status).toBe(400);
     expect(res.body.success).toBe(false);
     expect(res.body.message).toBe("Invalid credentials");
